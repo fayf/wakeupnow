@@ -14,7 +14,7 @@ public class BeeperOverlay extends Overlay{
 	private DBHelper helper;
 	
 	@Override
-	public boolean onTap(GeoPoint p, MapView mapView) {		
+	public boolean onTap(GeoPoint p, MapView mapView) {
 		Intent intent = new Intent(C.ACTION_ADD_ALERT);
 		intent.putExtra(C.EXTRA_LATITUDE, p.getLatitudeE6());
 		intent.putExtra(C.EXTRA_LONGITUDE, p.getLongitudeE6());
@@ -29,14 +29,13 @@ public class BeeperOverlay extends Overlay{
 		
 		Projection projection = mapView.getProjection();
 
+		float circleRadius = 15;
 		for(ProximityAlert alert : helper.getAlerts()){
 			Point pt = new Point();
 
 			GeoPoint geo = new GeoPoint((int) (alert.getLatitude() *1e6), (int)(alert.getLongitude() * 1e6));
 
 			projection.toPixels(geo ,pt);
-
-			float circleRadius = 15;
 
 			Paint innerCirclePaint;
 

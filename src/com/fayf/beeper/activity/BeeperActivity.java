@@ -2,11 +2,6 @@ package com.fayf.beeper.activity;
 
 import java.io.IOException;
 
-import com.fayf.beeper.DBHelper;
-import com.fayf.beeper.R;
-import com.fayf.beeper.R.id;
-import com.fayf.beeper.R.layout;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -21,6 +16,9 @@ import android.os.Vibrator;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+
+import com.fayf.beeper.DBHelper;
+import com.fayf.beeper.R;
 
 public class BeeperActivity extends Activity {
 	private SoundPool soundPool;
@@ -88,6 +86,7 @@ public class BeeperActivity extends Activity {
 	protected void onDestroy() {
 		super.onDestroy();
 		stop();
+		dbHelper.close();
 	}
 	
 	private void stop(){

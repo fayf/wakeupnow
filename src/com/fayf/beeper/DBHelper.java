@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBHelper extends SQLiteOpenHelper{
 	private static final String DB_NAME = "Beeper";
-	private static final int DB_VERSION = 3;
+	private static final int DB_VERSION = 4;
 	
 	public static final String KEY_ID = "_id";
 	public static final String KEY_LATITUDE = "lat";
@@ -102,25 +102,7 @@ public class DBHelper extends SQLiteOpenHelper{
 		return db.query(TABLE_NAME, columns, null, null, null, null, null);
 	}
 	
-	public void clearData(){
-		db.execSQL(DROP_TABLE);
-		db.execSQL(CREATE_TABLE);
+	public int clearData(){
+		return db.delete(TABLE_NAME, null, null);
 	}
-	
-//	
-//	public void saveData(List<DataRow> rows){
-//		db.execSQL(DROP_TABLE);
-//		db.execSQL(CREATE_TABLE);
-//		
-//		for(DataRow row: rows){
-//			ContentValues values = new ContentValues();
-//			values.put(KEY_TYPE, row.type.getVal());
-//			values.put(KEY_PAYING_FOR_ALL, row.payingForAll);
-//			values.put(KEY_WINNER, row.winner);
-//			values.put(KEY_GUILTY, row.shooter);
-//			values.put(KEY_POINTS, row.points);
-//			
-//			db.replace(TABLE_NAME, null, values);
-//		}
-//	}
 }

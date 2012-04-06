@@ -1,11 +1,5 @@
 package com.fayf.beeper.activity;
 
-import com.fayf.beeper.C;
-import com.fayf.beeper.DBHelper;
-import com.fayf.beeper.R;
-import com.fayf.beeper.R.id;
-import com.fayf.beeper.R.layout;
-
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,11 +8,13 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
 import android.widget.TextView;
+
+import com.fayf.beeper.C;
+import com.fayf.beeper.DBHelper;
+import com.fayf.beeper.R;
 
 public class ListAlertsActivity extends ListActivity{
 	private static final String[] FROM = {DBHelper.KEY_ID, DBHelper.KEY_LATITUDE, DBHelper.KEY_LONGITUDE, DBHelper.KEY_EXPIRY};
@@ -57,20 +53,20 @@ public class ListAlertsActivity extends ListActivity{
 			}
 		});
 		
-		getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
-			@Override
-			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-				//Remove alert
-				Cursor c = adapter.getCursor();
-				c.moveToPosition(position);
-				
-				long alertId = c.getLong(c.getColumnIndex(DBHelper.KEY_ID));
-				Intent intent = new Intent(C.ACTION_REMOVE_ALERT);
-				intent.putExtra(C.EXTRA_ID, alertId);
-				sendBroadcast(intent);
-				return true;
-			}
-		});
+//		getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
+//			@Override
+//			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//				//Remove alert
+//				Cursor c = adapter.getCursor();
+//				c.moveToPosition(position);
+//				
+//				long alertId = c.getLong(c.getColumnIndex(DBHelper.KEY_ID));
+//				Intent intent = new Intent(C.ACTION_REMOVE_ALERT);
+//				intent.putExtra(C.EXTRA_ID, alertId);
+//				sendBroadcast(intent);
+//				return true;
+//			}
+//		});
 
 		setListAdapter(adapter);
 	}

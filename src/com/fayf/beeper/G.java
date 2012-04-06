@@ -1,7 +1,5 @@
 package com.fayf.beeper;
 
-import java.util.ArrayList;
-import java.util.List;
 
 //Globals
 public class G {
