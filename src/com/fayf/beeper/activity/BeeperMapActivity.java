@@ -42,6 +42,8 @@ public class BeeperMapActivity extends MapActivity {
 	private DBHelper dbHelper;
 	private MenuInflater menuInflater;
 	
+	private MyLocationOverlay myLocOverlay;
+	
 	private BroadcastReceiver removeReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, Intent intent) {
@@ -86,19 +88,21 @@ public class BeeperMapActivity extends MapActivity {
 		if(loc != null) controller.setCenter(location2GeoPoint(loc));
 		controller.setZoom(15);
 
-		mapView.setClickable(true); //Enables map controls
+		mapView.setClickable(true); //Enables map panning/zooming controls
+		mapView.setBuiltInZoomControls(true);
 		overlays = mapView.getOverlays();
 
 		overlays.add(new BeeperOverlay());
-		MyLocationOverlay o = new MyLocationOverlay(this, mapView);
-		o.enableMyLocation();
+		myLocOverlay = new MyLocationOverlay(this, mapView);
+		myLocOverlay.enableMyLocation();
 		
-		overlays.add(o);
+		overlays.add(myLocOverlay);
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		myLocOverlay.disableMyLocation();
 		unregisterReceiver(addReceiver);
 		unregisterReceiver(removeReceiver);
 	}
@@ -115,10 +119,11 @@ public class BeeperMapActivity extends MapActivity {
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
 			Cursor c = dbHelper.getAlertsCursor();
-			c.moveToFirst();
-			do{
-				locMan.removeProximityAlert(createAlertPI(c.getLong(c.getColumnIndex(DBHelper.KEY_ID))));
-			}while(c.moveToNext());
+			if(c.moveToFirst()){
+				do{
+					locMan.removeProximityAlert(createAlertPI(c.getLong(c.getColumnIndex(DBHelper.KEY_ID))));
+				}while(c.moveToNext());
+			}
 			
 			dbHelper.clearData();
 			mapView.postInvalidate();
