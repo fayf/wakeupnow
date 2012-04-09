@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.fayf.wakeupnow.activity.AlertsMapActivity.PopupViewHolder;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
@@ -28,7 +29,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 
 		popup.setLayoutParams(mapParams);
 		populate();
-//		refresh();
 	}	
 
 	@Override
@@ -46,10 +46,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 		setLastFocusedIndex(-1);
 		populate();
 	}
-
-//	public void refresh(){
-//		populate();
-//	}
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent e, MapView mapView){
@@ -75,7 +71,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 
 			mapView.setTag(R.id.tag_item_tapped, new Boolean(itemTapped));
 			if(itemTapped){
-//				ProximityAlert item = items.get(tappedIndex);
 				ProximityAlert item = dbHelper.getAlert(tappedIndex);
 				mapParams.point = item.getPoint();
 				mapView.setTag(R.id.tag_item, item);
@@ -103,7 +98,8 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
 		super.draw(canvas, mapView, shadow);
-
+		
+		//TODO draw alert radius
 		if(tappedPoint != null){
 			Projection projection = mapView.getProjection();
 
@@ -118,13 +114,12 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 			//Draw fill
 			paint.setARGB(255, 255, 255, 255);
 			paint.setStyle(Paint.Style.FILL);
-
 			canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
 
 			//Draw stroke
 			paint.setARGB(255, 0, 0, 0);
-			paint.setStyle(Paint.Style.STROKE);
 			paint.setStrokeWidth(2);
+			paint.setStyle(Paint.Style.STROKE);
 			canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
 		}
 	}

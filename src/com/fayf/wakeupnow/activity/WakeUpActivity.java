@@ -23,13 +23,13 @@ import android.widget.Button;
 
 import com.fayf.wakeupnow.DBHelper;
 
-public class BeeperActivity extends Activity {
+public class WakeUpActivity extends Activity {
 	private SoundPool soundPool;
 	private int streamID;
 	private Vibrator vibrator;
 	private Button buttonStop;
 	private DBHelper dbHelper;
-	private PowerManager.WakeLock wakelock;
+	private PowerManager.WakeLock wakeLock;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -41,8 +41,8 @@ public class BeeperActivity extends Activity {
 		
 		//Wake screen up
 		PowerManager powerMan = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakelock = powerMan.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "BeeperActivity");
-        wakelock.acquire();
+        wakeLock = powerMan.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "BeeperActivity");
+        wakeLock.acquire();
 
 		//Unlock phone
 		Window window = getWindow();
@@ -80,7 +80,7 @@ public class BeeperActivity extends Activity {
 		
 		//Layout
 		buttonStop = new Button(this);
-		buttonStop.setText("YOU ARE REACHING YOUR DESTINATION!\nPress to silence alarm!");
+		buttonStop.setText("Wake up now!\nYOU ARE REACHING YOUR DESTINATION!\nPress to silence alarm!");
 
 		//Button for stopping sound
 		buttonStop.setOnClickListener(new OnClickListener() {
@@ -97,7 +97,7 @@ public class BeeperActivity extends Activity {
 		super.onDestroy();
 		stop();
 		dbHelper.close();
-		wakelock.release();
+		wakeLock.release();
 	}
 	
 	@Override

@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,9 +17,9 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 
 import com.fayf.wakeupnow.AlertsOverlay;
+import com.fayf.wakeupnow.C;
 import com.fayf.wakeupnow.DBHelper;
 import com.fayf.wakeupnow.G;
-import com.fayf.wakeupnow.PopupViewHolder;
 import com.fayf.wakeupnow.ProximityAlert;
 import com.fayf.wakeupnow.R;
 import com.google.android.maps.GeoPoint;
@@ -30,12 +29,10 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 
-public class BeeperMapActivity extends MapActivity {
-	private final String API_KEY_DEBUG = "0A19afdIbyAvK-T4zkmx8oFN6mwOODNUSa9-Ynw";
-
-//	private final long EXPIRATION_DURATION = 60*60*1000; // 1 hour
-	private final long EXPIRATION_DURATION = -1; // indefinite
-	private final int ALERT_RADIUS = 1000;
+public class AlertsMapActivity extends MapActivity {
+	public class PopupViewHolder {
+		public Button buttonDelete, buttonCreate;
+	}
 
 	private MapView mapView;
 	private LocationManager locMan;
@@ -63,18 +60,19 @@ public class BeeperMapActivity extends MapActivity {
 			@Override
 			public void onClick(View v) {
 				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
-				ProximityAlert alert = new ProximityAlert(point, "", "", 1000, EXPIRATION_DURATION);
+				ProximityAlert alert = new ProximityAlert(point, "", "", C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
 				
 				//Add to db
 				long id = dbHelper.addAlert(alert);
+				//TODO allow user to set radius and expiration
+				//TODO allow user labels for alerts
+				//TODO allow timetabling
 				
 				//Register proximity alert with locman
 				double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
-				locMan.addProximityAlert(lati, longi, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
-//				itemOverlay.addItem(alert);
+				locMan.addProximityAlert(lati, longi, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION, createAlertPI(id));
 				itemOverlay.itemsUpdated();
 				
-//				itemOverlay.resetTappedPoint();
 				mapView.postInvalidate();
 				mapView.removeView(popupView);
 			}
@@ -88,9 +86,7 @@ public class BeeperMapActivity extends MapActivity {
 				locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
 				dbHelper.removeAlert(alertItem.getId());
 				itemOverlay.itemsUpdated();
-//				itemOverlay.removeItem(alertItem);
 				
-//				itemOverlay.resetTappedPoint();
 				mapView.postInvalidate();
 				mapView.removeView(popupView);
 			}
@@ -102,12 +98,7 @@ public class BeeperMapActivity extends MapActivity {
 		popupView.setTag(popupVH);
 		
 		//Create mapview
-		mapView = new MapView(this, API_KEY_DEBUG){
-			@Override
-			protected ContextMenuInfo getContextMenuInfo() {
-				return super.getContextMenuInfo();
-			}
-		};
+		mapView = new MapView(this, C.API_KEY_DEBUG);
 		setContentView(mapView);
 		
 		//Configure mapview
@@ -157,28 +148,19 @@ public class BeeperMapActivity extends MapActivity {
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {		
-		// Handle item selection
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
 			List<ProximityAlert> alerts = dbHelper.getAlerts();
 			for(ProximityAlert alert : alerts)
 				locMan.removeProximityAlert(createAlertPI(alert.getId()));
-//			Cursor c = dbHelper.getAlertsCursor();
-//			if(c.moveToFirst()){
-//				do{
-//					locMan.removeProximityAlert(createAlertPI(c.getLong(c.getColumnIndex(DBHelper.KEY_ID))));
-//				}while(c.moveToNext());
-//			}
-//			c.close();
 			
 			dbHelper.clearData();
-//			itemOverlay.clear();
 			itemOverlay.itemsUpdated();
 			mapView.postInvalidate();
 			mapView.removeView(popupView);
 			return true;
 		case R.id.menu_test:
-			Intent intent = new Intent(this, BeeperActivity.class);
+			Intent intent = new Intent(this, WakeUpActivity.class);
 			startActivity(intent);
 			return true;
 		case R.id.menu_list_alerts:
@@ -191,7 +173,7 @@ public class BeeperMapActivity extends MapActivity {
 	}
 
 	private PendingIntent createAlertPI(long id){
-		Intent intent = new Intent(getApplicationContext(), BeeperActivity.class);
+		Intent intent = new Intent(getApplicationContext(), WakeUpActivity.class);
 		intent.setAction(""+id);
 		PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 		
@@ -210,6 +192,6 @@ public class BeeperMapActivity extends MapActivity {
 	 * @return A GeoPoint representation of the Location.
 	 */
 	private GeoPoint location2GeoPoint(Location loc){
-		return new GeoPoint((int)(loc.getLatitude()*1E6), (int)(loc.getLongitude()*1E6));
+		return new GeoPoint((int)(loc.getLatitude()*1e6), (int)(loc.getLongitude()*1e6));
 	}
 }

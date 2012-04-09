@@ -52,24 +52,6 @@ public class DBHelper extends SQLiteOpenHelper{
 		db.execSQL(CREATE_TABLE);
 	}
 	
-//	public ProximityAlert getAlertById(long id){
-//		Cursor c = db.query(TABLE_NAME, null, "rowid="+id, null, null, null, null);
-//		if(c.moveToFirst()){
-//			ProximityAlert alert = new ProximityAlert(
-//				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
-//				"",
-//				"",
-//				1000,
-//				c.getLong(c.getColumnIndex(KEY_EXPIRY)));
-//			alert.setId(id);
-//			c.close();
-//			return alert;
-//		}else{
-//			c.close();
-//			return null;
-//		}
-//	}
-	
 	public ProximityAlert getAlert(int index){
 		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, KEY_ID + " asc", index+",1");
 		if(c.moveToFirst()){
