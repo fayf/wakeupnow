@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.view.View;
@@ -72,8 +73,14 @@ public class ListAlertsActivity extends ListActivity{
 	}
 	
 	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+	}
+	
+	@Override
 	protected void onDestroy() {
 		unregisterReceiver(updatedReceiver);
+		dbHelper.close();
 		super.onDestroy();
 	}
 }

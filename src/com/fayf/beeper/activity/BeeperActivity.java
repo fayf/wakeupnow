@@ -4,17 +4,21 @@ import java.io.IOException;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
+import android.content.res.Configuration;
 import android.location.LocationManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.media.SoundPool.OnLoadCompleteListener;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 
 import com.fayf.beeper.DBHelper;
@@ -24,20 +28,26 @@ public class BeeperActivity extends Activity {
 	private SoundPool soundPool;
 	private int streamID;
 	private Vibrator vibrator;
-	private AssetManager assetMan;
 	private Button buttonStop;
 	private DBHelper dbHelper;
-	private LocationManager locMan;
+	private PowerManager.WakeLock wakelock;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-		assetMan = getAssets();
+		LocationManager locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
-		
-		locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 		dbHelper = new DBHelper(this);
+		
+		//Wake screen up
+		PowerManager powerMan = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wakelock = powerMan.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "BeeperActivity");
+        wakelock.acquire();
+
+		//Unlock phone
+		Window window = getWindow();
+		window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 		
 		//Remove alert
 		Intent intent = getIntent();
@@ -50,7 +60,7 @@ public class BeeperActivity extends Activity {
 		//Sound
 		AssetFileDescriptor fd = null;
 		try {
-			fd = assetMan.openFd("alert.mp3");
+			fd = getAssets().openFd("alert.mp3");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,9 +80,9 @@ public class BeeperActivity extends Activity {
 		}
 		
 		//Layout
-		setContentView(R.layout.activity_beeper);
-		buttonStop = (Button) findViewById(R.id.button_stop);
-		
+		buttonStop = new Button(this);
+		buttonStop.setText("YOU ARE REACHING YOUR DESTINATION!\nPress to silence alarm!");
+
 		//Button for stopping sound
 		buttonStop.setOnClickListener(new OnClickListener() {
 			@Override
@@ -80,6 +90,7 @@ public class BeeperActivity extends Activity {
 				stop();
 			}
 		});
+		setContentView(buttonStop);
 	}
 	
 	@Override
@@ -87,10 +98,17 @@ public class BeeperActivity extends Activity {
 		super.onDestroy();
 		stop();
 		dbHelper.close();
+		wakelock.release();
+	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
 	}
 	
 	private void stop(){
 		soundPool.stop(streamID);
+		soundPool.release();
 		vibrator.cancel();
 	}
 }

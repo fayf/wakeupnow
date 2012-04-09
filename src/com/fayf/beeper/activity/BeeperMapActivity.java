@@ -4,20 +4,24 @@ import java.util.List;
 
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 
 import com.fayf.beeper.BeeperItemOverlay;
 import com.fayf.beeper.DBHelper;
+import com.fayf.beeper.G;
+import com.fayf.beeper.PopupViewHolder;
 import com.fayf.beeper.ProximityAlert;
 import com.fayf.beeper.ProximityAlertItem;
 import com.fayf.beeper.R;
@@ -36,40 +40,14 @@ public class BeeperMapActivity extends MapActivity {
 	private final int ALERT_RADIUS = 1000;
 
 	private MapView mapView;
-	private MapController controller;
 	private LocationManager locMan;
-	private List<Overlay> overlays;
 	private DBHelper dbHelper;
 	private MenuInflater menuInflater;
+	private View popupView;
+	private Button popupCreate, popupDelete;
 	
 	private MyLocationOverlay myLocOverlay;
 	private BeeperItemOverlay itemOverlay;
-	
-//	private BroadcastReceiver removeReceiver = new BroadcastReceiver() {
-//		@Override
-//		public void onReceive(Context context, Intent intent) {
-//			Bundle e = intent.getExtras();
-//			long alertId = e.getLong(C.EXTRA_ID);
-//			locMan.removeProximityAlert(createAlertPI(alertId));
-//			dbHelper.removeAlert(alertId);
-//			
-//			Intent newIntent = new Intent(C.ACTION_ALERTS_UDPATED);
-//			sendBroadcast(newIntent);
-//		}
-//	};
-//	
-//	private BroadcastReceiver addReceiver = new BroadcastReceiver() {
-//		@Override
-//		public void onReceive(Context context, Intent intent) {
-//			//add to list of alerts
-//			Bundle e = intent.getExtras();
-//			double latitude = e.getInt(C.EXTRA_LATITUDE)/1e6, longitude = e.getInt(C.EXTRA_LONGITUDE)/1e6;
-//			long id = dbHelper.addAlert(new ProximityAlert(latitude, longitude, 1000, EXPIRATION_DURATION));
-//			locMan.addProximityAlert(latitude, longitude, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
-//			
-//			mapView.postInvalidate();
-//		}
-//	};
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -77,6 +55,47 @@ public class BeeperMapActivity extends MapActivity {
 		dbHelper = new DBHelper(this);
 		menuInflater = getMenuInflater();
 		locMan = (LocationManager)getSystemService(LOCATION_SERVICE);
+		
+		G.density = getResources().getDisplayMetrics().density;
+		
+		//Create popup
+		popupView = getLayoutInflater().inflate(R.layout.map_popup, null);
+		popupCreate = (Button) popupView.findViewById(R.id.button_create);
+		popupCreate.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
+				double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
+				long id = dbHelper.addAlert(new ProximityAlert(lati, longi, 1000, EXPIRATION_DURATION));
+				locMan.addProximityAlert(lati, longi, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
+				ProximityAlertItem alertItem = new ProximityAlertItem(point, "", "", id);
+				itemOverlay.addItem(alertItem);
+				
+				itemOverlay.resetTappedPoint();
+				mapView.postInvalidate();
+				mapView.removeView(popupView);
+			}
+		});
+		popupDelete = (Button) popupView.findViewById(R.id.button_delete);
+		popupDelete.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ProximityAlertItem alertItem = (ProximityAlertItem)mapView.getTag(R.id.tag_item);
+				
+				locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
+				dbHelper.removeAlert(alertItem.getId());
+				itemOverlay.removeItem(alertItem);
+				
+				itemOverlay.resetTappedPoint();
+				mapView.postInvalidate();
+				mapView.removeView(popupView);
+			}
+		});
+
+		PopupViewHolder popupVH = new PopupViewHolder();
+		popupVH.buttonCreate = popupCreate;
+		popupVH.buttonDelete = popupDelete;
+		popupView.setTag(popupVH);
 		
 		//Create mapview
 		mapView = new MapView(this, API_KEY_DEBUG){
@@ -87,12 +106,8 @@ public class BeeperMapActivity extends MapActivity {
 		};
 		setContentView(mapView);
 		
-		//Register broadcast receivers
-//		registerReceiver(addReceiver, new IntentFilter(C.ACTION_ADD_ALERT));
-//		registerReceiver(removeReceiver, new IntentFilter(C.ACTION_REMOVE_ALERT));
-
 		//Configure mapview
-		controller = mapView.getController();
+		MapController controller = mapView.getController();
 		controller.setZoom(15);
 		mapView.setClickable(true); //Enables map panning/zooming controls
 		mapView.setBuiltInZoomControls(true);
@@ -101,13 +116,10 @@ public class BeeperMapActivity extends MapActivity {
 		if(loc != null) controller.setCenter(location2GeoPoint(loc));
 
 		//Overlays
-		overlays = mapView.getOverlays();
+		List<Overlay> overlays = mapView.getOverlays();
 		
-		//To create alerts
-		registerForContextMenu(mapView);
-
 		Drawable d = getResources().getDrawable(R.drawable.marker);
-		itemOverlay = new BeeperItemOverlay(this, d);
+		itemOverlay = new BeeperItemOverlay(this, popupView, d);
 		overlays.add(itemOverlay);
 		
 		myLocOverlay = new MyLocationOverlay(this, mapView);
@@ -119,7 +131,6 @@ public class BeeperMapActivity extends MapActivity {
 	protected void onResume() {
 		super.onResume();
 		itemOverlay.refresh();
-//		mapView.postInvalidate();
 	}
 
 	@Override
@@ -127,8 +138,11 @@ public class BeeperMapActivity extends MapActivity {
 		super.onDestroy();
 		dbHelper.close();
 		myLocOverlay.disableMyLocation();
-//		unregisterReceiver(addReceiver);
-//		unregisterReceiver(removeReceiver);
+	}
+	
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
 	}
 	
 	@Override
@@ -153,6 +167,7 @@ public class BeeperMapActivity extends MapActivity {
 			dbHelper.clearData();
 			itemOverlay.clear();
 			mapView.postInvalidate();
+			mapView.removeView(popupView);
 			return true;
 		case R.id.menu_test:
 			Intent intent = new Intent(this, BeeperActivity.class);
@@ -166,53 +181,6 @@ public class BeeperMapActivity extends MapActivity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo info) {
-	    super.onCreateContextMenu(menu, v, info);
-	    
-	    boolean itemTapped = (Boolean)v.getTag(R.id.tag_item_tapped);
-	    
-	    if(itemTapped){
-	    	menuInflater.inflate(R.menu.context_menu_item, menu);
-	    }else{
-	    	menuInflater.inflate(R.menu.context_menu, menu);
-	    }
-	}
-	
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		// Handle item selection
-		switch (item.getItemId()) {
-		case R.id.menu_create:
-			GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
-			double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
-			long id = dbHelper.addAlert(new ProximityAlert(lati, longi, 1000, EXPIRATION_DURATION));
-			locMan.addProximityAlert(lati, longi, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
-			ProximityAlertItem alertItem = new ProximityAlertItem(point, "", "", id);
-			itemOverlay.addItem(alertItem);
-			return true;
-		case R.id.menu_delete:
-			alertItem = (ProximityAlertItem)mapView.getTag(R.id.tag_item);
-			
-			//TODO Need to remove from 3 places. Can refactor?
-			locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
-			dbHelper.removeAlert(alertItem.getId());
-			itemOverlay.removeItem(alertItem);
-			return true;
-		default:
-			return super.onContextItemSelected(item);
-		}
-	}
-	
-	@Override
-	public void onContextMenuClosed(Menu menu) {
-		super.onContextMenuClosed(menu);
-		
-		itemOverlay.resetTappedPoint();
-		mapView.postInvalidate();
-	}
-
 
 	private PendingIntent createAlertPI(long id){
 		Intent intent = new Intent(getApplicationContext(), BeeperActivity.class);
