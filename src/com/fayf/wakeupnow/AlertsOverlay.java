@@ -1,10 +1,5 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.app.Activity;
-import android.database.Cursor;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -17,10 +12,8 @@ import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 import com.google.android.maps.Projection;
 
-public class BeeperItemOverlay extends ItemizedOverlay<ProximityAlertItem>{
-	private Activity activity;
-	private List<ProximityAlertItem> items = new ArrayList<ProximityAlertItem>();
-
+public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
+	private DBHelper dbHelper;
 	private boolean isPinch = false;
 	private int tappedIndex;
 	private GeoPoint tappedPoint;
@@ -28,72 +21,35 @@ public class BeeperItemOverlay extends ItemizedOverlay<ProximityAlertItem>{
 
 	private View popupView;
 
-	public BeeperItemOverlay(Activity activity, View popup, Drawable defaultMarker) {
+	public AlertsOverlay(DBHelper dbHelper, View popup, Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
-		this.activity = activity;
+		this.dbHelper = dbHelper;
 		this.popupView = popup;
 
 		popup.setLayoutParams(mapParams);
-		refresh();
+		populate();
+//		refresh();
 	}	
 
 	@Override
-	protected ProximityAlertItem createItem(int i) {
-		return items.get(i);
+	protected ProximityAlert createItem(int i) {
+		return dbHelper.getAlert(i);
 	}
 
 	@Override
 	public int size() {
-		return items.size();
+		return (int) dbHelper.getCount();
 	}
-
-	public void addItem(ProximityAlertItem item) {
-		items.add(item);
-		setLastFocusedIndex(-1);
-		populate();
-	}
-
-	public void removeItem(int index){
-		items.remove(index);
-		setLastFocusedIndex(-1);
-		populate();
-	}
-
-	public void removeItem(ProximityAlertItem alertItem){
-		items.remove(alertItem);
-		setLastFocusedIndex(-1);
-		populate();
-	}
-
-	public void clear(){
-		items.clear();
-		setLastFocusedIndex(-1);
-		populate();
-	}
-
-	public void resetTappedPoint(){
+	
+	public void itemsUpdated(){
 		tappedPoint = null;
+		setLastFocusedIndex(-1);
+		populate();
 	}
 
-	public void refresh(){
-		items.clear();
-		DBHelper helper = new DBHelper(activity);
-
-		Cursor c = helper.getAlertsCursor();
-		if(c.moveToFirst()){
-			do{
-				int lati = c.getInt(c.getColumnIndex(DBHelper.KEY_LATITUDE));
-				int longi = c.getInt(c.getColumnIndex(DBHelper.KEY_LONGITUDE));
-				long id = c.getInt(c.getColumnIndex(DBHelper.KEY_ID));
-				ProximityAlertItem alertItem = new ProximityAlertItem(new GeoPoint(lati, longi), "", "", id);
-				addItem(alertItem);
-			}while(c.moveToNext());	
-		}else{
-			populate();
-		}
-		c.close();
-		helper.close();
-	}
+//	public void refresh(){
+//		populate();
+//	}
 	
 	@Override
 	public boolean onTouchEvent(MotionEvent e, MapView mapView){
@@ -119,9 +75,10 @@ public class BeeperItemOverlay extends ItemizedOverlay<ProximityAlertItem>{
 
 			mapView.setTag(R.id.tag_item_tapped, new Boolean(itemTapped));
 			if(itemTapped){
-				ProximityAlertItem item = items.get(tappedIndex);
+//				ProximityAlert item = items.get(tappedIndex);
+				ProximityAlert item = dbHelper.getAlert(tappedIndex);
 				mapParams.point = item.getPoint();
-				mapView.setTag(R.id.tag_item, items.get(tappedIndex));
+				mapView.setTag(R.id.tag_item, item);
 				popupVH.buttonCreate.setVisibility(View.GONE);
 				popupVH.buttonDelete.setVisibility(View.VISIBLE);
 			}else{

@@ -1,4 +1,4 @@
-package com.fayf.beeper.activity;
+package com.fayf.wakeupnow.activity;
 
 import java.io.IOException;
 
@@ -21,8 +21,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 
-import com.fayf.beeper.DBHelper;
-import com.fayf.beeper.R;
+import com.fayf.wakeupnow.DBHelper;
 
 public class BeeperActivity extends Activity {
 	private SoundPool soundPool;

@@ -1,4 +1,4 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
 //Globals
 public class G {

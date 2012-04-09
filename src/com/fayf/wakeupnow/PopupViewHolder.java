@@ -1,4 +1,4 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
 import android.widget.Button;
 

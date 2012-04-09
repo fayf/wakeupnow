@@ -12,13 +12,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/popup_button_bg"
-        android:text="Create alert" />
+        android:text="@string/button_popup_create_label" />
 
     <Button
         android:id="@+id/button_delete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="@drawable/popup_button_bg"
-        android:text="Delete alert" />
+        android:text="@string/button_popup_delete_label" />
 
 </LinearLayout>

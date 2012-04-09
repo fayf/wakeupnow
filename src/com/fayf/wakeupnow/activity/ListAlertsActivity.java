@@ -1,4 +1,4 @@
-package com.fayf.beeper.activity;
+package com.fayf.wakeupnow.activity;
 
 import android.app.ListActivity;
 import android.content.BroadcastReceiver;
@@ -13,9 +13,9 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
 import android.widget.TextView;
 
-import com.fayf.beeper.C;
-import com.fayf.beeper.DBHelper;
-import com.fayf.beeper.R;
+import com.fayf.wakeupnow.C;
+import com.fayf.wakeupnow.DBHelper;
+import com.fayf.wakeupnow.R;
 
 public class ListAlertsActivity extends ListActivity{
 	private static final String[] FROM = {DBHelper.KEY_ID, DBHelper.KEY_LATITUDE, DBHelper.KEY_LONGITUDE, DBHelper.KEY_EXPIRY};
@@ -40,8 +40,7 @@ public class ListAlertsActivity extends ListActivity{
 		dbHelper = new DBHelper(this);
 		
 		adapter = new SimpleCursorAdapter(this, R.layout.list_item, dbHelper.getAlertsCursor(), FROM, TO);
-		
-		
+			
 		adapter.setViewBinder(new ViewBinder() {
 			
 			@Override

@@ -1,4 +1,4 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,12 +6,15 @@ import java.util.List;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.google.android.maps.GeoPoint;
+
 public class DBHelper extends SQLiteOpenHelper{
 	private static final String DB_NAME = "Beeper";
-	private static final int DB_VERSION = 4;
+	private static final int DB_VERSION = 5;
 	
 	public static final String KEY_ID = "_id";
 	public static final String KEY_LATITUDE = "lat";
@@ -49,14 +52,34 @@ public class DBHelper extends SQLiteOpenHelper{
 		db.execSQL(CREATE_TABLE);
 	}
 	
-	public ProximityAlert getAlert(long id){
-		Cursor c = db.query(TABLE_NAME, null, "rowid="+id, null, null, null, null);
+//	public ProximityAlert getAlertById(long id){
+//		Cursor c = db.query(TABLE_NAME, null, "rowid="+id, null, null, null, null);
+//		if(c.moveToFirst()){
+//			ProximityAlert alert = new ProximityAlert(
+//				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
+//				"",
+//				"",
+//				1000,
+//				c.getLong(c.getColumnIndex(KEY_EXPIRY)));
+//			alert.setId(id);
+//			c.close();
+//			return alert;
+//		}else{
+//			c.close();
+//			return null;
+//		}
+//	}
+	
+	public ProximityAlert getAlert(int index){
+		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, KEY_ID + " asc", index+",1");
 		if(c.moveToFirst()){
 			ProximityAlert alert = new ProximityAlert(
-				c.getInt(c.getColumnIndex(KEY_LATITUDE))/1e6,
-				c.getInt(c.getColumnIndex(KEY_LONGITUDE))/1e6,
+				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
+				"",
+				"",
 				1000,
 				c.getLong(c.getColumnIndex(KEY_EXPIRY)));
+			alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
 			c.close();
 			return alert;
 		}else{
@@ -67,15 +90,22 @@ public class DBHelper extends SQLiteOpenHelper{
 	
 	public long addAlert(ProximityAlert alert){
 		ContentValues values = new ContentValues();
-		values.put(KEY_LATITUDE, alert.getLatitude()*1e6);
-		values.put(KEY_LONGITUDE, alert.getLongitude()*1e6);
+		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
+		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
-		return db.insert(TABLE_NAME, null, values);
+		
+		long id = db.insert(TABLE_NAME, null, values);
+		alert.setId(id);
+		return id;
 	}
 	
 	public int removeAlert(long id){
 		return db.delete(TABLE_NAME, "_id="+id, null);
+	}
+	
+	public long getCount(){
+		return DatabaseUtils.queryNumEntries(db, TABLE_NAME);
 	}
 	
 	public List<ProximityAlert> getAlerts(){
@@ -85,11 +115,12 @@ public class DBHelper extends SQLiteOpenHelper{
 		
 		while(c.moveToNext()){
 			ProximityAlert alert = new ProximityAlert(
-					c.getInt(c.getColumnIndex(KEY_LATITUDE))/1e6,
-					c.getInt(c.getColumnIndex(KEY_LONGITUDE))/1e6,
+					new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
+					"",
+					"",
 					1000,
 					c.getLong(c.getColumnIndex(KEY_EXPIRY)));
-			
+			alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
 			alerts.add(alert);
 		}
 		

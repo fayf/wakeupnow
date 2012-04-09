@@ -1,11 +1,10 @@
-package com.fayf.beeper.activity;
+package com.fayf.wakeupnow.activity;
 
 import java.util.List;
 
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
@@ -18,13 +17,12 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 
-import com.fayf.beeper.BeeperItemOverlay;
-import com.fayf.beeper.DBHelper;
-import com.fayf.beeper.G;
-import com.fayf.beeper.PopupViewHolder;
-import com.fayf.beeper.ProximityAlert;
-import com.fayf.beeper.ProximityAlertItem;
-import com.fayf.beeper.R;
+import com.fayf.wakeupnow.AlertsOverlay;
+import com.fayf.wakeupnow.DBHelper;
+import com.fayf.wakeupnow.G;
+import com.fayf.wakeupnow.PopupViewHolder;
+import com.fayf.wakeupnow.ProximityAlert;
+import com.fayf.wakeupnow.R;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -47,7 +45,7 @@ public class BeeperMapActivity extends MapActivity {
 	private Button popupCreate, popupDelete;
 	
 	private MyLocationOverlay myLocOverlay;
-	private BeeperItemOverlay itemOverlay;
+	private AlertsOverlay itemOverlay;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -65,13 +63,18 @@ public class BeeperMapActivity extends MapActivity {
 			@Override
 			public void onClick(View v) {
 				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
-				double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
-				long id = dbHelper.addAlert(new ProximityAlert(lati, longi, 1000, EXPIRATION_DURATION));
-				locMan.addProximityAlert(lati, longi, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
-				ProximityAlertItem alertItem = new ProximityAlertItem(point, "", "", id);
-				itemOverlay.addItem(alertItem);
+				ProximityAlert alert = new ProximityAlert(point, "", "", 1000, EXPIRATION_DURATION);
 				
-				itemOverlay.resetTappedPoint();
+				//Add to db
+				long id = dbHelper.addAlert(alert);
+				
+				//Register proximity alert with locman
+				double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
+				locMan.addProximityAlert(lati, longi, ALERT_RADIUS, EXPIRATION_DURATION, createAlertPI(id));
+//				itemOverlay.addItem(alert);
+				itemOverlay.itemsUpdated();
+				
+//				itemOverlay.resetTappedPoint();
 				mapView.postInvalidate();
 				mapView.removeView(popupView);
 			}
@@ -80,13 +83,14 @@ public class BeeperMapActivity extends MapActivity {
 		popupDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ProximityAlertItem alertItem = (ProximityAlertItem)mapView.getTag(R.id.tag_item);
+				ProximityAlert alertItem = (ProximityAlert)mapView.getTag(R.id.tag_item);
 				
 				locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
 				dbHelper.removeAlert(alertItem.getId());
-				itemOverlay.removeItem(alertItem);
+				itemOverlay.itemsUpdated();
+//				itemOverlay.removeItem(alertItem);
 				
-				itemOverlay.resetTappedPoint();
+//				itemOverlay.resetTappedPoint();
 				mapView.postInvalidate();
 				mapView.removeView(popupView);
 			}
@@ -119,7 +123,7 @@ public class BeeperMapActivity extends MapActivity {
 		List<Overlay> overlays = mapView.getOverlays();
 		
 		Drawable d = getResources().getDrawable(R.drawable.marker);
-		itemOverlay = new BeeperItemOverlay(this, popupView, d);
+		itemOverlay = new AlertsOverlay(dbHelper, popupView, d);
 		overlays.add(itemOverlay);
 		
 		myLocOverlay = new MyLocationOverlay(this, mapView);
@@ -130,7 +134,7 @@ public class BeeperMapActivity extends MapActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		itemOverlay.refresh();
+		itemOverlay.itemsUpdated();
 	}
 
 	@Override
@@ -156,16 +160,20 @@ public class BeeperMapActivity extends MapActivity {
 		// Handle item selection
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
-			Cursor c = dbHelper.getAlertsCursor();
-			if(c.moveToFirst()){
-				do{
-					locMan.removeProximityAlert(createAlertPI(c.getLong(c.getColumnIndex(DBHelper.KEY_ID))));
-				}while(c.moveToNext());
-			}
-			c.close();
+			List<ProximityAlert> alerts = dbHelper.getAlerts();
+			for(ProximityAlert alert : alerts)
+				locMan.removeProximityAlert(createAlertPI(alert.getId()));
+//			Cursor c = dbHelper.getAlertsCursor();
+//			if(c.moveToFirst()){
+//				do{
+//					locMan.removeProximityAlert(createAlertPI(c.getLong(c.getColumnIndex(DBHelper.KEY_ID))));
+//				}while(c.moveToNext());
+//			}
+//			c.close();
 			
 			dbHelper.clearData();
-			itemOverlay.clear();
+//			itemOverlay.clear();
+			itemOverlay.itemsUpdated();
 			mapView.postInvalidate();
 			mapView.removeView(popupView);
 			return true;

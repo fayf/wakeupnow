@@ -1,8 +1,8 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
 //Constants
 public class C {
-	public static final String PACKAGE_NAME = "com.fayf.beeper";
+	public static final String PACKAGE_NAME = "com.fayf.wakeupnow";
 	public static final String EXTRA_LATITUDE = PACKAGE_NAME + ".EXTRA_LATITUDE";
 	public static final String EXTRA_LONGITUDE = PACKAGE_NAME + ".EXTRA_LONGITUDE";
 	public static final String EXTRA_ID = PACKAGE_NAME + ".EXTRA_ID";

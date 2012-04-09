@@ -1,4 +1,4 @@
-package com.fayf.beeper;
+package com.fayf.wakeupnow;
 
 public class Utils {
 	public static int dp2px(int dp){
