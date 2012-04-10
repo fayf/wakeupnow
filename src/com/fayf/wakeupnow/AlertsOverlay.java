@@ -1,5 +1,7 @@
 package com.fayf.wakeupnow;
 
+import java.util.List;
+
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
@@ -98,29 +100,50 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
 		super.draw(canvas, mapView, shadow);
+		Projection projection = mapView.getProjection();
 		
-		//TODO draw alert radius
-		if(tappedPoint != null){
-			Projection projection = mapView.getProjection();
+		if(shadow){
+			List<ProximityAlert> alerts = dbHelper.getAlerts();
+			for(ProximityAlert alert : alerts){
+				Point pt = new Point();
+				projection.toPixels(alert.getPoint(), pt);
 
-			float circleRadius = 10;
-			Point pt = new Point();
+				Paint paint = new Paint();
+				paint.setAntiAlias(true);
 
-			projection.toPixels(tappedPoint, pt);
+				int radius = Utils.m2px(alert.getRadius(), alert.getPoint().getLatitudeE6()/1e6, projection);
+				
+				//Draw fill
+				paint.setARGB(100, 0, 100, 255);
+				paint.setStyle(Paint.Style.FILL);
+				canvas.drawCircle((float)pt.x, (float)pt.y, radius, paint);
 
-			Paint paint = new Paint();
-			paint.setAntiAlias(true);
+				//Draw stroke
+				paint.setARGB(100, 0, 0, 0);
+				paint.setStrokeWidth(2);
+				paint.setStyle(Paint.Style.STROKE);
+				canvas.drawCircle((float)pt.x, (float)pt.y, radius, paint);
+			}			
+		}else{
+			if(tappedPoint != null){
+				float circleRadius = 10;
+				Point pt = new Point();
+				projection.toPixels(tappedPoint, pt);
 
-			//Draw fill
-			paint.setARGB(255, 255, 255, 255);
-			paint.setStyle(Paint.Style.FILL);
-			canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
+				Paint paint = new Paint();
+				paint.setAntiAlias(true);
 
-			//Draw stroke
-			paint.setARGB(255, 0, 0, 0);
-			paint.setStrokeWidth(2);
-			paint.setStyle(Paint.Style.STROKE);
-			canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
+				//Draw fill
+				paint.setARGB(255, 255, 255, 255);
+				paint.setStyle(Paint.Style.FILL);
+				canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
+
+				//Draw stroke
+				paint.setARGB(255, 0, 0, 0);
+				paint.setStrokeWidth(2);
+				paint.setStyle(Paint.Style.STROKE);
+				canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
+			}
 		}
 	}
 }

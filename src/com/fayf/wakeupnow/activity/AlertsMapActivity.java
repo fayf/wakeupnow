@@ -172,6 +172,12 @@ public class AlertsMapActivity extends MapActivity {
 		}
 	}
 
+	@Override
+	protected boolean isRouteDisplayed() {
+		return false;
+	}
+
+
 	private PendingIntent createAlertPI(long id){
 		Intent intent = new Intent(getApplicationContext(), WakeUpActivity.class);
 		intent.setAction(""+id);
@@ -179,12 +185,6 @@ public class AlertsMapActivity extends MapActivity {
 		
 		return pi;
 	}
-
-	@Override
-	protected boolean isRouteDisplayed() {
-		return false;
-	}
-
 	/**
 	 * Converts a Location to a GeoPoint
 	 * @param loc
