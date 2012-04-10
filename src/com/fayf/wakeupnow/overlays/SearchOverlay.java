@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.graphics.drawable.Drawable;
-import android.util.Log;
+import android.location.Address;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -75,6 +75,23 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult>{
 			mapView.setTag(R.id.tag_geopoint, item.getPoint());
 			popupVH.buttonCreate.setVisibility(View.VISIBLE);
 			popupVH.buttonDelete.setVisibility(View.GONE);
+			popupVH.buttonSave.setVisibility(View.GONE);
+			
+			Address address = item.getAddress();
+			String feature = address.getFeatureName();
+			if(feature != null){
+//				popupVH.editTitle.setVisibility(View.VISIBLE);
+				popupVH.editTitle.setText(feature);
+			}
+			
+			String addressStr = "";
+			int lines = address.getMaxAddressLineIndex()+1;
+			for(int i=0; i<lines; i++){
+				addressStr += address.getAddressLine(i);
+				if(i != lines-1) addressStr += "\n";
+			}
+//			popupVH.editSnippet.setVisibility(View.VISIBLE);
+			popupVH.editSnippet.setText(addressStr);
 
 			mapView.removeView(popupView);
 			popupView.setLayoutParams(mapParams);

@@ -74,17 +74,28 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 			PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 
 			if(itemTapped){
+				//Tap on alert item
 				ProximityAlert item = dbHelper.getAlert(tappedIndex);
 				mapParams.point = item.getPoint();
 				mapView.setTag(R.id.tag_item, item);
 				popupVH.buttonCreate.setVisibility(View.GONE);
 				popupVH.buttonDelete.setVisibility(View.VISIBLE);
+				popupVH.buttonSave.setVisibility(View.VISIBLE);
+				
+				popupVH.editTitle.setText(item.getTitle());
+				popupVH.editSnippet.setText(item.getSnippet());
 			}else{
+				//Tap on empty area
 				mapParams.point = p;
 				tappedPoint = p;
 				mapView.setTag(R.id.tag_geopoint, p);
+				
 				popupVH.buttonCreate.setVisibility(View.VISIBLE);
 				popupVH.buttonDelete.setVisibility(View.GONE);
+				popupVH.buttonSave.setVisibility(View.GONE);
+				
+				popupVH.editTitle.setText(null);
+				popupVH.editSnippet.setText(null);
 			}
 
 			mapView.removeView(popupView);

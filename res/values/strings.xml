@@ -5,5 +5,14 @@
     <string name="button_popup_delete_label">Delete alert</string>
     <string name="no_results_returned">No results returned.</string>
     <string name="searching">Searching...</string>
+    <string name="hint_title">Title</string>
+    <string name="hint_snippet">Snippet</string>
+    <string name="button_popup_save_label">Save changes</string>
+    <string name="changes_saved">Changes saved.</string>
+    <string name="alert_removed">Alert removed.</string>
+    <string name="alert_added">Alert added.</string>
+    <string name="error_saving_alert">Error saving alert!</string>
+    <string name="error_removing_alert">Error removing alert!</string>
+    <string name="error_saving_changes">Error saving changes!</string>
 
 </resources>

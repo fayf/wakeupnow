@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.fayf.wakeupnow.C;
@@ -40,7 +41,8 @@ import com.google.android.maps.Overlay;
 
 public class AlertsMapActivity extends MapActivity {
 	public class PopupViewHolder {
-		public Button buttonDelete, buttonCreate;
+		public Button buttonDelete, buttonCreate, buttonSave;
+		public EditText editTitle, editSnippet;
 	}
 
 	private Geocoder geocoder;
@@ -49,7 +51,6 @@ public class AlertsMapActivity extends MapActivity {
 	private DBHelper dbHelper;
 	private MenuInflater menuInflater;
 	private View popupView;
-	private Button popupCreate, popupDelete;
 
 	private MapController controller;
 
@@ -71,17 +72,23 @@ public class AlertsMapActivity extends MapActivity {
 
 		//Create popup
 		popupView = getLayoutInflater().inflate(R.layout.map_popup, null);
+		
+
+		Button popupCreate, popupDelete, popupSave;
 		popupCreate = (Button) popupView.findViewById(R.id.button_create);
 		popupCreate.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
-				ProximityAlert alert = new ProximityAlert(point, "", "", C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
+				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
+				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
+				ProximityAlert alert = new ProximityAlert(point, title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
 
 				//Add to db
 				long id = dbHelper.addAlert(alert);
 				//TODO allow user to set radius and expiration
-				//TODO allow user labels for alerts
+				//TODO styling for edittexts in popup
+				//TODO styling for listalertsactivity
 				//TODO allow timetabling
 
 				//Register proximity alert with locman
@@ -108,10 +115,32 @@ public class AlertsMapActivity extends MapActivity {
 				mapView.removeView(popupView);
 			}
 		});
+		popupSave = (Button) popupView.findViewById(R.id.button_save);
+		popupSave.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
+				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
+				ProximityAlert alertItem = (ProximityAlert)mapView.getTag(R.id.tag_item);
+				ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
+				newAlert.setId(alertItem.getId());
+				
+				dbHelper.updateAlert(newAlert);
+				alertsOverlay.itemsUpdated();
+
+				mapView.postInvalidate();
+				mapView.removeView(popupView);
+				
+				Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+			}
+		});
 
 		PopupViewHolder popupVH = new PopupViewHolder();
 		popupVH.buttonCreate = popupCreate;
 		popupVH.buttonDelete = popupDelete;
+		popupVH.buttonSave = popupSave;
+		popupVH.editTitle = (EditText) popupView.findViewById(R.id.text_title);
+		popupVH.editSnippet = (EditText) popupView.findViewById(R.id.text_snippet);
 		popupView.setTag(popupVH);
 
 		//Create mapview
