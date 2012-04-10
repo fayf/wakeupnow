@@ -15,4 +15,16 @@ public class C {
 	public static final String ACTION_FIRE_ALERT = PACKAGE_NAME + ".ACTION_FIRE_ALERT";
 	public static final String ACTION_ALERTS_UDPATED = PACKAGE_NAME + ".ACTION_ALERTS_UDPATED";
 	
+	//For Geocoder, taken from www.geonames.com
+//	public static final int SG_BOUND_WEST = (int) (103.638275*1e6);
+//	public static final int SG_BOUND_NORTH = (int) (1.471278*1e6);
+//	public static final int SG_BOUND_EAST = (int) (104.007469*1e6);
+//	public static final int SG_BOUND_SOUTH = (int) (1.258556*1e6);
+//	public static final int SG_BOUND_WEST = (int) (103.638275*1e6);
+	public static final double SG_BOUND_NORTH = 1.471278;
+	public static final double SG_BOUND_EAST = 104.007469;
+	public static final double SG_BOUND_SOUTH = 1.258556;
+	public static final double SG_BOUND_WEST = 103.638275;
+	
+	public static final int DEFAULT_ZOOM_LEVEL = 15;
 }

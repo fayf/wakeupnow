@@ -1,4 +1,4 @@
-package com.fayf.wakeupnow;
+package com.fayf.wakeupnow.overlays;
 
 import java.util.List;
 
@@ -9,6 +9,10 @@ import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.fayf.wakeupnow.DBHelper;
+import com.fayf.wakeupnow.R;
+import com.fayf.wakeupnow.Utils;
+import com.fayf.wakeupnow.R.id;
 import com.fayf.wakeupnow.activity.AlertsMapActivity.PopupViewHolder;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
@@ -24,12 +28,10 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 
 	private View popupView;
 
-	public AlertsOverlay(DBHelper dbHelper, View popup, Drawable defaultMarker) {
+	public AlertsOverlay(DBHelper dbHelper, View popupView, Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
 		this.dbHelper = dbHelper;
-		this.popupView = popup;
-
-		popup.setLayoutParams(mapParams);
+		this.popupView = popupView;
 		populate();
 	}	
 
@@ -71,7 +73,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 		if(!isPinch){
 			PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 
-			mapView.setTag(R.id.tag_item_tapped, new Boolean(itemTapped));
 			if(itemTapped){
 				ProximityAlert item = dbHelper.getAlert(tappedIndex);
 				mapParams.point = item.getPoint();
@@ -87,6 +88,7 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 			}
 
 			mapView.removeView(popupView);
+			popupView.setLayoutParams(mapParams);
 			mapView.addView(popupView);
 		}
 		return true;
@@ -99,10 +101,10 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 	}
 
 	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		super.draw(canvas, mapView, shadow);
 		Projection projection = mapView.getProjection();
 		
 		if(shadow){
+			//Draw alert radius
 			List<ProximityAlert> alerts = dbHelper.getAlerts();
 			for(ProximityAlert alert : alerts){
 				Point pt = new Point();
@@ -145,5 +147,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert>{
 				canvas.drawCircle((float)pt.x, (float)pt.y, circleRadius, paint);
 			}
 		}
+		super.draw(canvas, mapView, shadow);
 	}
 }

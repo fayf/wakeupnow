@@ -10,6 +10,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.fayf.wakeupnow.overlays.ProximityAlert;
 import com.google.android.maps.GeoPoint;
 
 public class DBHelper extends SQLiteOpenHelper{
@@ -54,20 +55,10 @@ public class DBHelper extends SQLiteOpenHelper{
 	
 	public ProximityAlert getAlert(int index){
 		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, KEY_ID + " asc", index+",1");
-		if(c.moveToFirst()){
-			ProximityAlert alert = new ProximityAlert(
-				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
-				"",
-				"",
-				1000,
-				c.getLong(c.getColumnIndex(KEY_EXPIRY)));
-			alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
-			c.close();
-			return alert;
-		}else{
-			c.close();
-			return null;
-		}
+		ProximityAlert alert = null;
+		if(c.moveToFirst()) alert = alertFromCursor(c);
+		c.close();
+		return alert;
 	}
 	
 	public long addAlert(ProximityAlert alert){
@@ -83,7 +74,7 @@ public class DBHelper extends SQLiteOpenHelper{
 	}
 	
 	public int removeAlert(long id){
-		return db.delete(TABLE_NAME, "_id="+id, null);
+		return db.delete(TABLE_NAME, KEY_ID+"="+id, null);
 	}
 	
 	public long getCount(){
@@ -96,13 +87,7 @@ public class DBHelper extends SQLiteOpenHelper{
 		Cursor c = db.query(TABLE_NAME, columns, null, null, null, null, null);
 		
 		while(c.moveToNext()){
-			ProximityAlert alert = new ProximityAlert(
-					new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
-					"",
-					"",
-					1000,
-					c.getLong(c.getColumnIndex(KEY_EXPIRY)));
-			alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
+			ProximityAlert alert = alertFromCursor(c);
 			alerts.add(alert);
 		}
 		
@@ -117,5 +102,16 @@ public class DBHelper extends SQLiteOpenHelper{
 	
 	public int clearData(){
 		return db.delete(TABLE_NAME, null, null);
+	}
+	
+	private ProximityAlert alertFromCursor(Cursor c){
+		ProximityAlert alert = new ProximityAlert(
+			new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
+			"",
+			"",
+			1000,
+			c.getLong(c.getColumnIndex(KEY_EXPIRY)));
+		alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
+		return alert;
 	}
 }

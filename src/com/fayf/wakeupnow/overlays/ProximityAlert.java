@@ -1,4 +1,4 @@
-package com.fayf.wakeupnow;
+package com.fayf.wakeupnow.overlays;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
