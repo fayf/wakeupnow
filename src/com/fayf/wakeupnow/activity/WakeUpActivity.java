@@ -30,7 +30,7 @@ public class WakeUpActivity extends Activity {
 	private Button buttonStop;
 	private DBHelper dbHelper;
 	private PowerManager.WakeLock wakeLock;
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -38,51 +38,51 @@ public class WakeUpActivity extends Activity {
 		LocationManager locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		dbHelper = new DBHelper(this);
-		
-		//Wake screen up
-		PowerManager powerMan = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = powerMan.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "BeeperActivity");
-        wakeLock.acquire();
 
-		//Unlock phone
+		// Wake screen up
+		PowerManager powerMan = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		wakeLock = powerMan.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "BeeperActivity");
+		wakeLock.acquire();
+
+		// Unlock phone
 		Window window = getWindow();
 		window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-		
-		//Remove alert
+
+		// Remove alert
 		Intent intent = getIntent();
-		if(intent.getAction() != null){
+		if (intent.getAction() != null) {
 			PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 			dbHelper.removeAlert(Long.parseLong(intent.getAction()));
 			locMan.removeProximityAlert(pi);
 		}
-		
-		//Sound
+
+		// Sound
 		AssetFileDescriptor fd = null;
 		try {
 			fd = getAssets().openFd("alert.mp3");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-		
-		if (fd != null){
+
+		if (fd != null) {
 			soundPool.setOnLoadCompleteListener(new OnLoadCompleteListener() {
 				@Override
 				public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
 					streamID = soundPool.play(sampleId, 1.0f, 1.0f, 1, -1, 1.0f);
-					long[] arr = {0l, 500l, 500l};
+					long[] arr = { 0l, 500l, 500l };
 					vibrator.vibrate(arr, 0);
 				}
 			});
 			soundPool.load(fd, 1);
 		}
-		
-		//Layout
+
+		// Layout
 		buttonStop = new Button(this);
 		buttonStop.setText("Wake up now!\nYOU ARE REACHING YOUR DESTINATION!\nPress to silence alarm!");
 
-		//Button for stopping sound
+		// Button for stopping sound
 		buttonStop.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -91,7 +91,7 @@ public class WakeUpActivity extends Activity {
 		});
 		setContentView(buttonStop);
 	}
-	
+
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
@@ -99,13 +99,13 @@ public class WakeUpActivity extends Activity {
 		dbHelper.close();
 		wakeLock.release();
 	}
-	
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 	}
-	
-	private void stop(){
+
+	private void stop() {
 		soundPool.stop(streamID);
 		soundPool.release();
 		vibrator.cancel();

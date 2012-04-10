@@ -15,7 +15,7 @@ import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
 
-public class SearchOverlay extends ItemizedOverlay<SearchResult>{
+public class SearchOverlay extends ItemizedOverlay<SearchResult> {
 	private View popupView;
 	private boolean isPinch;
 	private int tappedIndex;
@@ -38,36 +38,36 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult>{
 		return items.size();
 	}
 
-	public void clear(){
+	public void clear() {
 		items.clear();
 		setLastFocusedIndex(-1);
 		populate();
 	}
 
-	public void addItem(SearchResult item){
+	public void addItem(SearchResult item) {
 		items.add(item);
 		setLastFocusedIndex(-1);
 		populate();
 	}
 
 	@Override
-	public boolean onTouchEvent(MotionEvent e, MapView mapView){
-		if( e.getAction()==MotionEvent.ACTION_DOWN ){
-			isPinch=false;
+	public boolean onTouchEvent(MotionEvent e, MapView mapView) {
+		if (e.getAction() == MotionEvent.ACTION_DOWN) {
+			isPinch = false;
 		}
 
-		if( e.getAction()==MotionEvent.ACTION_MOVE){
+		if (e.getAction() == MotionEvent.ACTION_MOVE) {
 			mapView.removeView(popupView);
-			if(e.getPointerCount() > 1) isPinch=true;
+			if (e.getPointerCount() > 1) isPinch = true;
 		}
-		return super.onTouchEvent(e,mapView);
+		return super.onTouchEvent(e, mapView);
 	}
 
 	@Override
 	public boolean onTap(GeoPoint p, MapView mapView) {
 		tappedIndex = -1;
 		boolean itemTapped = super.onTap(p, mapView);
-		if(!isPinch && itemTapped){
+		if (!isPinch && itemTapped) {
 			PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 
 			SearchResult item = items.get(tappedIndex);
@@ -76,21 +76,18 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult>{
 			popupVH.buttonCreate.setVisibility(View.VISIBLE);
 			popupVH.buttonDelete.setVisibility(View.GONE);
 			popupVH.buttonSave.setVisibility(View.GONE);
-			
+
 			Address address = item.getAddress();
 			String feature = address.getFeatureName();
-			if(feature != null){
-//				popupVH.editTitle.setVisibility(View.VISIBLE);
-				popupVH.editTitle.setText(feature);
-			}
-			
+			if (feature != null) popupVH.editTitle.setText(feature);
+			else popupVH.editTitle.setText(null);
+
 			String addressStr = "";
-			int lines = address.getMaxAddressLineIndex()+1;
-			for(int i=0; i<lines; i++){
+			int lines = address.getMaxAddressLineIndex() + 1;
+			for (int i = 0; i < lines; i++) {
 				addressStr += address.getAddressLine(i);
-				if(i != lines-1) addressStr += "\n";
+				if (i != lines - 1) addressStr += "\n";
 			}
-//			popupVH.editSnippet.setVisibility(View.VISIBLE);
 			popupVH.editSnippet.setText(addressStr);
 
 			mapView.removeView(popupView);

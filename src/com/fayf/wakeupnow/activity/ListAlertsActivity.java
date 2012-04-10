@@ -56,10 +56,10 @@ public class ListAlertsActivity extends ListActivity{
 //		getListView().setOnItemLongClickListener(new OnItemLongClickListener() {
 //			@Override
 //			public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//				//Remove alert
+//				// Remove alert
 //				Cursor c = adapter.getCursor();
 //				c.moveToPosition(position);
-//				
+//
 //				long alertId = c.getLong(c.getColumnIndex(DBHelper.KEY_ID));
 //				Intent intent = new Intent(C.ACTION_REMOVE_ALERT);
 //				intent.putExtra(C.EXTRA_ID, alertId);

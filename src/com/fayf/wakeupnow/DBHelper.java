@@ -14,8 +14,8 @@ import com.fayf.wakeupnow.overlays.ProximityAlert;
 import com.google.android.maps.GeoPoint;
 
 public class DBHelper extends SQLiteOpenHelper{
-	private static final String DB_NAME = "wakemeup";
-	private static final int DB_VERSION = 7;
+	private static final String DB_NAME = "wakeupnow";
+	private static final int DB_VERSION = 1;
 
 	public static final String KEY_ID = "_id";
 	public static final String KEY_LATITUDE = "lat";
@@ -69,9 +69,12 @@ public class DBHelper extends SQLiteOpenHelper{
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
-		values.put(KEY_TITLE, alert.getTitle());
-		values.put(KEY_SNIPPET, alert.getSnippet());
+		String title = alert.getTitle();
+		if(title.length() > 0) values.put(KEY_TITLE, title);
+		String snippet = alert.getSnippet();
+		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
 		values.put(KEY_EXPIRY, alert.getExpiration());
+		values.put(KEY_ACTIVE, 1);
 
 		long id = db.insert(TABLE_NAME, null, values);
 		alert.setId(id);
@@ -82,8 +85,10 @@ public class DBHelper extends SQLiteOpenHelper{
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
-		values.put(KEY_TITLE, alert.getTitle());
-		values.put(KEY_SNIPPET, alert.getSnippet());
+		String title = alert.getTitle();
+		if(title.length() > 0) values.put(KEY_TITLE, title);
+		String snippet = alert.getSnippet();
+		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
 
@@ -100,7 +105,6 @@ public class DBHelper extends SQLiteOpenHelper{
 
 	public List<ProximityAlert> getAlerts(){
 		List<ProximityAlert> alerts = new ArrayList<ProximityAlert>();
-//		String[] columns = {KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_EXPIRY};
 		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, null);
 
 		while(c.moveToNext()){
@@ -113,7 +117,6 @@ public class DBHelper extends SQLiteOpenHelper{
 	}
 
 	public Cursor getAlertsCursor(){
-		//String[] columns = {KEY_ID, KEY_LATITUDE, KEY_LONGITUDE, KEY_EXPIRY};
 		return db.query(TABLE_NAME, null, null, null, null, null, null);
 	}
 

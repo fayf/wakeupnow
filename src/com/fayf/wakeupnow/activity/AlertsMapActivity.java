@@ -15,6 +15,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.SearchRecentSuggestions;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,6 +29,7 @@ import com.fayf.wakeupnow.C;
 import com.fayf.wakeupnow.DBHelper;
 import com.fayf.wakeupnow.G;
 import com.fayf.wakeupnow.R;
+import com.fayf.wakeupnow.RecentSearchProvider;
 import com.fayf.wakeupnow.overlays.AlertsOverlay;
 import com.fayf.wakeupnow.overlays.ProximityAlert;
 import com.fayf.wakeupnow.overlays.SearchOverlay;
@@ -41,8 +43,11 @@ import com.google.android.maps.Overlay;
 
 public class AlertsMapActivity extends MapActivity {
 	public class PopupViewHolder {
-		public Button buttonDelete, buttonCreate, buttonSave;
-		public EditText editTitle, editSnippet;
+		public Button buttonDelete,
+				buttonCreate,
+				buttonSave;
+		public EditText editTitle,
+				editSnippet;
 	}
 
 	private Geocoder geocoder;
@@ -65,14 +70,13 @@ public class AlertsMapActivity extends MapActivity {
 		super.onCreate(savedInstanceState);
 		dbHelper = new DBHelper(this);
 		menuInflater = getMenuInflater();
-		locMan = (LocationManager)getSystemService(LOCATION_SERVICE);
+		locMan = (LocationManager) getSystemService(LOCATION_SERVICE);
 		geocoder = new Geocoder(this);
 
 		G.density = getResources().getDisplayMetrics().density;
 
-		//Create popup
+		// Create popup
 		popupView = getLayoutInflater().inflate(R.layout.map_popup, null);
-		
 
 		Button popupCreate, popupDelete, popupSave;
 		popupCreate = (Button) popupView.findViewById(R.id.button_create);
@@ -84,35 +88,48 @@ public class AlertsMapActivity extends MapActivity {
 				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
 				ProximityAlert alert = new ProximityAlert(point, title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
 
-				//Add to db
+				// Add to db
 				long id = dbHelper.addAlert(alert);
-				//TODO allow user to set radius and expiration
-				//TODO styling for edittexts in popup
-				//TODO styling for listalertsactivity
-				//TODO allow timetabling
+				// TODO allow user to set radius and expiration
+				// TODO styling for edittexts in popup
+				// TODO styling for listalertsactivity
+				// TODO allow timetabling
+				// TODO confirm for deletion/saving
 
-				//Register proximity alert with locman
-				double lati = point.getLatitudeE6()/1e6, longi = point.getLongitudeE6()/1e6;
-				locMan.addProximityAlert(lati, longi, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION, createAlertPI(id));
-				alertsOverlay.itemsUpdated();
-				searchOverlay.clear();
+				if (id >= 0) {
+					// Register proximity alert with locman
+					double lati = point.getLatitudeE6() / 1e6, longi = point.getLongitudeE6() / 1e6;
+					locMan.addProximityAlert(lati, longi, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION, createAlertPI(id));
+					alertsOverlay.itemsUpdated();
+					searchOverlay.clear();
 
-				mapView.postInvalidate();
-				mapView.removeView(popupView);
+					mapView.postInvalidate();
+					mapView.removeView(popupView);
+
+					Toast.makeText(AlertsMapActivity.this, R.string.alert_added, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(AlertsMapActivity.this, R.string.error_saving_alert, Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
 		popupDelete = (Button) popupView.findViewById(R.id.button_delete);
 		popupDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ProximityAlert alertItem = (ProximityAlert)mapView.getTag(R.id.tag_item);
+				ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
 
 				locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
-				dbHelper.removeAlert(alertItem.getId());
-				alertsOverlay.itemsUpdated();
+				int numRemoved = dbHelper.removeAlert(alertItem.getId());
+				if (numRemoved > 0) {
+					alertsOverlay.itemsUpdated();
 
-				mapView.postInvalidate();
-				mapView.removeView(popupView);
+					mapView.postInvalidate();
+					mapView.removeView(popupView);
+
+					Toast.makeText(AlertsMapActivity.this, R.string.alert_removed, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(AlertsMapActivity.this, R.string.error_removing_alert, Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
 		popupSave = (Button) popupView.findViewById(R.id.button_save);
@@ -121,17 +138,21 @@ public class AlertsMapActivity extends MapActivity {
 			public void onClick(View v) {
 				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
-				ProximityAlert alertItem = (ProximityAlert)mapView.getTag(R.id.tag_item);
+				ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
 				ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
 				newAlert.setId(alertItem.getId());
-				
-				dbHelper.updateAlert(newAlert);
-				alertsOverlay.itemsUpdated();
 
-				mapView.postInvalidate();
-				mapView.removeView(popupView);
-				
-				Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+				int numUpdated = dbHelper.updateAlert(newAlert);
+				if (numUpdated > 0) {
+					alertsOverlay.itemsUpdated();
+
+					mapView.postInvalidate();
+					mapView.removeView(popupView);
+
+					Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+				} else {
+					Toast.makeText(AlertsMapActivity.this, R.string.error_saving_changes, Toast.LENGTH_SHORT).show();
+				}
 			}
 		});
 
@@ -143,20 +164,21 @@ public class AlertsMapActivity extends MapActivity {
 		popupVH.editSnippet = (EditText) popupView.findViewById(R.id.text_snippet);
 		popupView.setTag(popupVH);
 
-		//Create mapview
+		// Create mapview
 		mapView = new MapView(this, C.API_KEY_DEBUG);
 		setContentView(mapView);
 
-		//Configure mapview
+		// Configure mapview
 		controller = mapView.getController();
 		controller.setZoom(C.DEFAULT_ZOOM_LEVEL);
-		mapView.setClickable(true); //Enables map panning/zooming controls
+		mapView.setClickable(true); // Enables map panning/zooming controls
 		mapView.setBuiltInZoomControls(true);
 
+		// Show last known location if available
 		Location loc = locMan.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		if(loc != null) controller.setCenter(location2GeoPoint(loc));
+		if (loc != null) controller.setCenter(location2GeoPoint(loc));
 
-		//Overlays
+		// Overlays
 		List<Overlay> overlays = mapView.getOverlays();
 
 		Drawable alertMarker = getResources().getDrawable(R.drawable.marker_alert);
@@ -172,7 +194,6 @@ public class AlertsMapActivity extends MapActivity {
 		overlays.add(searchOverlay);
 	}
 
-
 	@Override
 	public void onNewIntent(Intent newIntent) {
 		if (Intent.ACTION_SEARCH.equals(newIntent.getAction())) {
@@ -182,40 +203,42 @@ public class AlertsMapActivity extends MapActivity {
 
 	}
 
-	private void doSearch(String query){
-		//TODO save searches
+	private void doSearch(final String query) {
 		pd = ProgressDialog.show(this, null, getString(R.string.searching));
 		searchOverlay.clear();
 
-		new AsyncTask<String, Void, Boolean>(){
+		new AsyncTask<String, Void, Boolean>() {
+			private List<Address> results = null;
 
 			@Override
 			protected Boolean doInBackground(String... params) {
-				List<Address> results = null;
 				try {
 					results = geocoder.getFromLocationName(params[0], 5, C.SG_BOUND_SOUTH, C.SG_BOUND_WEST, C.SG_BOUND_NORTH, C.SG_BOUND_EAST);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 
-				if(results != null && results.size()> 0){
-					for(Address result : results) searchOverlay.addItem(new SearchResult(result));
+				if (results != null && results.size() > 0) {
+					for (Address result : results)
+						searchOverlay.addItem(new SearchResult(result));
 
-					//Zoom/pan map to fit all results
+					// Zoom/pan map to fit all results
 					controller.zoomToSpan(searchOverlay.getLatSpanE6(), searchOverlay.getLonSpanE6());
 					controller.animateTo(searchOverlay.getCenter());
 					return true;
 				}
 				return false;
 			}
-			
-			protected void onPostExecute(Boolean success) {
-				if(!success) Toast.makeText(AlertsMapActivity.this, R.string.no_results_returned, Toast.LENGTH_LONG).show();
 
-				//Hide spinner
-				if (pd != null)	pd.cancel();
+			protected void onPostExecute(Boolean success) {
+				if (!success) Toast.makeText(AlertsMapActivity.this, R.string.no_results_returned, Toast.LENGTH_LONG).show();
+
+				// Hide spinner
+				if (pd != null) pd.cancel();
+
+				SearchRecentSuggestions suggestions = new SearchRecentSuggestions(AlertsMapActivity.this, RecentSearchProvider.AUTHORITY, RecentSearchProvider.MODE);
+				suggestions.saveRecentQuery(query, results.size() + " result" + ((results.size() == 1)?"":"s"));
 			}
-			
 
 		}.execute(query);
 	}
@@ -251,11 +274,11 @@ public class AlertsMapActivity extends MapActivity {
 	}
 
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {		
+	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
 			List<ProximityAlert> alerts = dbHelper.getAlerts();
-			for(ProximityAlert alert : alerts)
+			for (ProximityAlert alert : alerts)
 				locMan.removeProximityAlert(createAlertPI(alert.getId()));
 
 			dbHelper.clearData();
@@ -279,9 +302,11 @@ public class AlertsMapActivity extends MapActivity {
 			onSearchRequested();
 			return true;
 		case R.id.menu_zoom_alerts:
-			if(alertsOverlay.size() > 0){
+			if (alertsOverlay.size() > 0) {
 				controller.zoomToSpan(alertsOverlay.getLatSpanE6(), alertsOverlay.getLonSpanE6());
 				controller.animateTo(alertsOverlay.getCenter());
+			}else{
+				Toast.makeText(this, R.string.no_alerts_to_show, Toast.LENGTH_SHORT).show();
 			}
 			return true;
 		default:
@@ -294,21 +319,22 @@ public class AlertsMapActivity extends MapActivity {
 		return false;
 	}
 
-
-	private PendingIntent createAlertPI(long id){
+	private PendingIntent createAlertPI(long id) {
 		Intent intent = new Intent(getApplicationContext(), WakeUpActivity.class);
-		intent.setAction(""+id);
+		intent.setAction("" + id);
 		PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
 		return pi;
 	}
+
 	/**
 	 * Converts a Location to a GeoPoint
+	 * 
 	 * @param loc
 	 *            The Location to convert.
 	 * @return A GeoPoint representation of the Location.
 	 */
-	private GeoPoint location2GeoPoint(Location loc){
-		return new GeoPoint((int)(loc.getLatitude()*1e6), (int)(loc.getLongitude()*1e6));
+	private GeoPoint location2GeoPoint(Location loc) {
+		return new GeoPoint((int) (loc.getLatitude() * 1e6), (int) (loc.getLongitude() * 1e6));
 	}
 }

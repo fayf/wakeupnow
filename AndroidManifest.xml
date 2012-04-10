@@ -28,6 +28,7 @@
 
         <activity android:name=".activity.ListAlertsActivity" android:label="@string/app_name" android:configChanges="keyboard|orientation">
         </activity>
+        <provider android:name="RecentSearchProvider" android:authorities="com.fayf.wakeupnow.RecentSearchProvider"></provider>
     </application>
 
 </manifest>

@@ -4,7 +4,7 @@
     <string name="button_popup_create_label">Create alert</string>
     <string name="button_popup_delete_label">Delete alert</string>
     <string name="no_results_returned">No results returned.</string>
-    <string name="searching">Searching...</string>
+    <string name="searching">Searching…</string>
     <string name="hint_title">Title</string>
     <string name="hint_snippet">Snippet</string>
     <string name="button_popup_save_label">Save changes</string>
@@ -14,5 +14,6 @@
     <string name="error_saving_alert">Error saving alert!</string>
     <string name="error_removing_alert">Error removing alert!</string>
     <string name="error_saving_changes">Error saving changes!</string>
+    <string name="no_alerts_to_show">No alerts to show.</string>
 
 </resources>
