@@ -1,109 +1,184 @@
 package com.fayf.wakeupnow.overlays;
 
+import java.util.List;
+
+import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ImageView;
 
+import com.fayf.wakeupnow.C;
 import com.fayf.wakeupnow.Utils;
 import com.google.android.maps.GeoPoint;
+import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
-import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
-public class RadiusOverlay extends Overlay{
-	private OverlayItem[] items = new OverlayItem[2];
-	private int tappedIndex;
-	private GeoPoint tappedPoint;
+public class RadiusOverlay extends ItemizedOverlay<OverlayItem> {
+	private List<IItemOverlay> overlays;
+	private GeoPoint center, circum;
 	private boolean isPinching;
-	private MapView.LayoutParams mapParams = new MapView.LayoutParams(MapView.LayoutParams.WRAP_CONTENT, MapView.LayoutParams.WRAP_CONTENT, null, 0, Utils.dp2px(-20), MapView.LayoutParams.BOTTOM_CENTER);
-	private View v;
-	private int currentRadius;
+	private int radius;
+	private MapView.LayoutParams mapParams = new MapView.LayoutParams(MapView.LayoutParams.WRAP_CONTENT, MapView.LayoutParams.WRAP_CONTENT, null, 0, 0, MapView.LayoutParams.CENTER);
+
+	private ImageView handle;
+	private Drawable handleDrawable;
 	
-	public RadiusOverlay(View v) {
-		this.v = v;
+	private OverlayItem tappedItem = null;
+
+	public RadiusOverlay(Context context, List<IItemOverlay> overlays, Drawable defaultMarker) {
+		super(boundCenter(defaultMarker));
+		this.overlays = overlays;
+		handleDrawable = defaultMarker;
+		handle = new ImageView(context);
+		handle.setImageDrawable(boundCenter(defaultMarker));
+		populate();
 	}
-	
-//	public RadiusOverlay(Drawable defaultMarker) {
-//		super(boundCenter(defaultMarker));
-//		items[0] = new OverlayItem(new GeoPoint(0, 0), "", "");
-//		items[1] = new OverlayItem(new GeoPoint(0, 0), "", "");
-//		populate();
-//	}
-//
-//	@Override
-//	protected OverlayItem createItem(int i) {
-//		return items[i];
-//	}
-//
-//	@Override
-//	public int size() {
-//		return 2;
-//	}
+
+	@Override
+	protected OverlayItem createItem(int i) {
+		return null;
+	}
+
+	@Override
+	public int size() {
+		return 0;
+	}
 
 	private boolean isDragging;
+
 	@Override
 	public boolean onTouchEvent(MotionEvent e, MapView mapView) {
+		int x = (int) e.getX(), y = (int) e.getY();
+		Projection proj = mapView.getProjection();
 		if (e.getAction() == MotionEvent.ACTION_DOWN) {
 			isPinching = false;
-			isDragging = true;
-		}else if (e.getAction() == MotionEvent.ACTION_MOVE) {
-			tappedPoint = null;
+
+			if (circum != null) {
+				Point circumPoint = proj.toPixels(circum, null);
+				if (center != null && hitTest(null, handleDrawable, x - circumPoint.x, y - circumPoint.y)) {
+					// handle was touched
+					isDragging = true;
+					return true;
+				}
+			}
+
+		} else if (e.getAction() == MotionEvent.ACTION_MOVE) {
 			if (e.getPointerCount() > 1) isPinching = true;
-		}else if (e.getAction() == MotionEvent.ACTION_UP) {
-			isDragging = false;
+			else if (isDragging) {
+				// Move circum
+				circum = proj.fromPixels((int) e.getX(), (int) e.getY());
+
+				// Move handle
+				mapParams.point = circum;
+				handle.setLayoutParams(mapParams);
+
+				// Find new radius
+				float[] results = new float[1];
+				Location.distanceBetween(center.getLatitudeE6() / 1e6, center.getLongitudeE6() / 1e6, circum.getLatitudeE6() / 1e6, circum.getLongitudeE6() / 1e6, results);
+				radius = (int) results[0];
+
+				return true;
+			}
+		} else if (e.getAction() == MotionEvent.ACTION_UP) {
+			if (isDragging) {
+				// End dragging
+				isDragging = false;
+				return true;
+			} else {
+				return false;
+			}
 		}
-		
-		
+
 		return super.onTouchEvent(e, mapView);
 	}
 
 	@Override
 	public boolean onTap(GeoPoint p, MapView mapView) {
-		tappedIndex = -1;
-		tappedPoint = null;
-		if (!isPinching) {
-			tappedPoint = p;
-			currentRadius = 50;
-		}
-		return super.onTap(p, mapView);
-	}
-	
-	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
-		Projection projection = mapView.getProjection();
+		if (!isPinching && !isDragging) {
 
-		if (shadow) {
-			if (tappedPoint != null) {
-				float circleRadius = 10;
-				Point pt = new Point();
-				projection.toPixels(tappedPoint, pt);
+			// Get tapped item from list of other overlays
+			tappedItem = null;
+			for (IItemOverlay overlay : overlays) {
+				OverlayItem temp = overlay.getTappedItem();
+				if (temp != null) {
+					tappedItem = temp;
+					break;
+				}
+			}
+			center = (tappedItem == null) ? p : tappedItem.getPoint();
+			if (tappedItem != null && tappedItem instanceof ProximityAlert) radius = ((ProximityAlert) tappedItem).getRadius();
+			else radius = C.DEFAULT_RADIUS;
+
+			Projection proj = mapView.getProjection();
+
+			// Find point on circumference
+			Point centerPoint = proj.toPixels(center, null);
+			centerPoint.x += Utils.m2px(radius, center.getLatitudeE6() / 1e6, proj);
+			circum = proj.fromPixels(centerPoint.x, centerPoint.y);
+
+			mapParams.point = circum;
+			handle.setLayoutParams(mapParams);
+			handle.setVisibility(View.VISIBLE);
+			mapView.removeView(handle);
+			mapView.addView(handle);
+		}
+		return false;
+	}
+
+	public void draw(Canvas canvas, MapView mapView, boolean shadow) {
+		Projection proj = mapView.getProjection();
+
+		if (!shadow) {
+			if (center != null) {
+				Point pt = proj.toPixels(center, null);
 
 				Paint paint = new Paint();
 				paint.setAntiAlias(true);
 
 				// Draw fill
-				paint.setARGB(255, 255, 255, 255);
+				paint.setColor(C.RADIUS_FILL_ACTIVE);
 				paint.setStyle(Paint.Style.FILL);
-				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
+				canvas.drawCircle((float) pt.x, (float) pt.y, Utils.m2px(radius, center.getLatitudeE6() / 1e6, proj), paint);
 
 				// Draw stroke
-				paint.setARGB(255, 0, 0, 0);
+				paint.setColor(C.RADIUS_STROKE);
 				paint.setStrokeWidth(2);
 				paint.setStyle(Paint.Style.STROKE);
-				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
-				
-				// Draw radius circle 
-				canvas.drawCircle((float) pt.x, (float) pt.y, currentRadius, paint);
+				canvas.drawCircle((float) pt.x, (float) pt.y, Utils.m2px(radius, center.getLatitudeE6() / 1e6, proj), paint);
+
+
+				if(tappedItem == null){
+					float circleRadius = 10;
+					
+					// Draw fill
+					paint.setColor(C.CENTER_FILL);
+					paint.setStyle(Paint.Style.FILL);
+					canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
+
+					// Draw stroke
+					paint.setColor(C.CENTER_STROKE);
+					paint.setStrokeWidth(2);
+					paint.setStyle(Paint.Style.STROKE);
+					canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
+				}
 			}
 		}
 		super.draw(canvas, mapView, shadow);
 	}
 
-//	@Override
-//	protected boolean onTap(int index) {
-//		tappedIndex = index;
-//		return true;
-//	}
+	public int getRadius() {
+		return radius;
+	}
+
+	public void clearUI() {
+		center = null;
+		handle.setVisibility(View.GONE);
+	}
 }

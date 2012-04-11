@@ -23,8 +23,8 @@ import com.google.android.maps.Projection;
 public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements IItemOverlay{
 	private DBHelper dbHelper;
 	private boolean isPinching = false;
-	private int tappedIndex;
-	private GeoPoint tappedPoint;
+	private int tappedIndex = -1;
+	private OverlayItem tappedItem;
 	private MapView.LayoutParams mapParams = new MapView.LayoutParams(MapView.LayoutParams.WRAP_CONTENT, MapView.LayoutParams.WRAP_CONTENT, null, 0, Utils.dp2px(-20), MapView.LayoutParams.BOTTOM_CENTER);
 
 	private View popupView;
@@ -47,7 +47,7 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 	}
 
 	public void itemsUpdated() {
-		tappedPoint = null;
+		tappedIndex = -1;
 		setLastFocusedIndex(-1);
 		populate();
 	}
@@ -59,8 +59,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 		}
 
 		if (e.getAction() == MotionEvent.ACTION_MOVE) {
-//			tappedPoint = null;
-//			mapView.removeView(popupView);
 			if (e.getPointerCount() > 1) isPinching = true;
 		}
 		return super.onTouchEvent(e, mapView);
@@ -69,7 +67,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 	@Override
 	public boolean onTap(GeoPoint p, MapView mapView) {
 		tappedIndex = -1;
-		tappedPoint = null;
 		boolean itemTapped = super.onTap(p, mapView);
 		if (!isPinching) {
 			PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
@@ -85,10 +82,11 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 
 				popupVH.editTitle.setText(item.getTitle());
 				popupVH.editSnippet.setText(item.getSnippet());
+				
+				tappedItem = item;
 			} else {
 				// Tap on empty area
 				mapParams.point = p;
-				tappedPoint = p;
 				mapView.setTag(R.id.tag_geopoint, p);
 
 				popupVH.buttonCreate.setVisibility(View.VISIBLE);
@@ -97,13 +95,15 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 
 				popupVH.editTitle.setText(null);
 				popupVH.editSnippet.setText(null);
+				
+				tappedItem = null;
 			}
 
 			mapView.removeView(popupView);
 			popupView.setLayoutParams(mapParams);
 			mapView.addView(popupView);
 		}
-		return true;
+		return false;
 	}
 
 	@Override
@@ -118,7 +118,14 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 		if (shadow) {
 			// Draw alert radius
 			List<ProximityAlert> alerts = dbHelper.getAlerts();
+			ProximityAlert tappedAlert = null;
+			
+			//Do not draw for tapped alert
+			if(tappedIndex >= 0) tappedAlert = alerts.get(tappedIndex);
+			
 			for (ProximityAlert alert : alerts) {
+				if(tappedAlert != null && alert.equals(tappedAlert)) continue;
+				
 				Point pt = new Point();
 				projection.toPixels(alert.getPoint(), pt);
 
@@ -138,26 +145,6 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 				paint.setStyle(Paint.Style.STROKE);
 				canvas.drawCircle((float) pt.x, (float) pt.y, radius, paint);
 			}
-		} else {
-			if (tappedPoint != null) {
-				float circleRadius = 10;
-				Point pt = new Point();
-				projection.toPixels(tappedPoint, pt);
-
-				Paint paint = new Paint();
-				paint.setAntiAlias(true);
-
-				// Draw fill
-				paint.setColor(C.CENTER_FILL);
-				paint.setStyle(Paint.Style.FILL);
-				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
-
-				// Draw stroke
-				paint.setColor(C.CENTER_STROKE);
-				paint.setStrokeWidth(2);
-				paint.setStyle(Paint.Style.STROKE);
-				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
-			}
 		}
 		super.draw(canvas, mapView, shadow);
 	}
@@ -165,5 +152,10 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 	@Override
 	public List<? extends OverlayItem> getItems() {
 		return dbHelper.getAlerts();
+	}
+
+	@Override
+	public OverlayItem getTappedItem() {
+		return tappedItem;
 	}
 }

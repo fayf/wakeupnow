@@ -20,6 +20,7 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult> implements IIte
 	private View popupView;
 	private boolean isPinch;
 	private int tappedIndex;
+	private OverlayItem tappedItem;
 	private List<SearchResult> items = new ArrayList<SearchResult>();
 	private MapView.LayoutParams mapParams = new MapView.LayoutParams(MapView.LayoutParams.WRAP_CONTENT, MapView.LayoutParams.WRAP_CONTENT, null, 0, Utils.dp2px(-20), MapView.LayoutParams.BOTTOM_CENTER);
 
@@ -94,8 +95,12 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult> implements IIte
 			mapView.removeView(popupView);
 			popupView.setLayoutParams(mapParams);
 			mapView.addView(popupView);
+			
+			tappedItem = item;
+		}else{
+			tappedItem = null;
 		}
-		return !isPinch && itemTapped;
+		return false;
 	}
 
 	@Override
@@ -107,5 +112,10 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult> implements IIte
 	@Override
 	public List<? extends OverlayItem> getItems() {
 		return items;
+	}
+
+	@Override
+	public OverlayItem getTappedItem() {
+		return tappedItem;
 	}
 }

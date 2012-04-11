@@ -6,9 +6,9 @@ import com.google.android.maps.OverlayItem;
 public class ProximityAlert extends OverlayItem {
 	private long id,
 			expiration;
-	private float radius;
+	private int radius;
 
-	public ProximityAlert(GeoPoint point, String title, String snippet, float radius, long expiration) {
+	public ProximityAlert(GeoPoint point, String title, String snippet, int radius, long expiration) {
 		super(point, title, snippet);
 		this.radius = radius;
 		this.expiration = expiration;
@@ -26,7 +26,7 @@ public class ProximityAlert extends OverlayItem {
 		return expiration;
 	}
 
-	public float getRadius() {
+	public int getRadius() {
 		return radius;
 	}
 }

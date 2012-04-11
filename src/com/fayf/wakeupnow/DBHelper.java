@@ -15,11 +15,12 @@ import com.google.android.maps.GeoPoint;
 
 public class DBHelper extends SQLiteOpenHelper{
 	private static final String DB_NAME = "wakeupnow";
-	private static final int DB_VERSION = 1;
+	private static final int DB_VERSION = 3;
 
 	public static final String KEY_ID = "_id";
 	public static final String KEY_LATITUDE = "lat";
 	public static final String KEY_LONGITUDE = "long";
+	public static final String KEY_RADIUS = "radius";
 	public static final String KEY_EXPIRY = "expiry";
 	public static final String KEY_ACTIVE = "active";
 	public static final String KEY_TITLE = "title";
@@ -33,6 +34,7 @@ public class DBHelper extends SQLiteOpenHelper{
 					+ KEY_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 					+ KEY_LATITUDE + " INTEGER NOT NULL, "
 					+ KEY_LONGITUDE + " INTEGER NOT NULL, "
+					+ KEY_RADIUS + " INTEGER NOT NULL, "
 					+ KEY_EXPIRY + " INTEGER NOT NULL, "
 					+ KEY_TITLE + " TEXT, "
 					+ KEY_SNIPPET + " TEXT, "
@@ -74,7 +76,8 @@ public class DBHelper extends SQLiteOpenHelper{
 		if(title.length() > 0) values.put(KEY_TITLE, title);
 		String snippet = alert.getSnippet();
 		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
-		
+
+		values.put(KEY_RADIUS, alert.getRadius());
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
 
@@ -92,7 +95,8 @@ public class DBHelper extends SQLiteOpenHelper{
 		if(title.length() > 0) values.put(KEY_TITLE, title);
 		String snippet = alert.getSnippet();
 		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
-		
+
+		values.put(KEY_RADIUS, alert.getRadius());
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
 
@@ -133,7 +137,7 @@ public class DBHelper extends SQLiteOpenHelper{
 				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
 				c.getString(c.getColumnIndex(KEY_TITLE)),
 				c.getString(c.getColumnIndex(KEY_SNIPPET)),
-				1000,
+				c.getInt(c.getColumnIndex(KEY_RADIUS)),
 				c.getLong(c.getColumnIndex(KEY_EXPIRY)));
 		alert.setId(c.getLong(c.getColumnIndex(KEY_ID)));
 		return alert;

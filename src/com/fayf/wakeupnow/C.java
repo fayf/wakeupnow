@@ -32,7 +32,8 @@ public class C {
 
 //	public static final int RADIUS_HANDLE_FILL = 0xff0064ff;
 //	public static final int RADIUS_HANDLE_STROKE = 0xff000000;
-	public static final int RADIUS_FILL = 0x640064ff;
+	public static final int RADIUS_FILL_ACTIVE = 0x6400ff00;
+	public static final int RADIUS_FILL = 0x64ff6400;
 	public static final int RADIUS_STROKE = 0x64000000;
 	public static final int CENTER_FILL = Color.WHITE;
 	public static final int CENTER_STROKE = Color.BLACK;

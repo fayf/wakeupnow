@@ -1,6 +1,7 @@
 package com.fayf.wakeupnow.activity;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.AlertDialog;
@@ -36,7 +37,7 @@ import com.fayf.wakeupnow.RecentSearchProvider;
 import com.fayf.wakeupnow.overlays.AlertsOverlay;
 import com.fayf.wakeupnow.overlays.IItemOverlay;
 import com.fayf.wakeupnow.overlays.ProximityAlert;
-import com.fayf.wakeupnow.overlays.RadiusItemOverlay;
+import com.fayf.wakeupnow.overlays.RadiusOverlay;
 import com.fayf.wakeupnow.overlays.SearchOverlay;
 import com.fayf.wakeupnow.overlays.SearchResult;
 import com.google.android.maps.GeoPoint;
@@ -73,6 +74,7 @@ public class AlertsMapActivity extends MapActivity {
 	private MyLocationOverlay myLocOverlay;
 	private AlertsOverlay alertsOverlay;
 	private SearchOverlay searchOverlay;
+	private RadiusOverlay radiusOverlay;
 
 	private ProgressDialog pd;
 
@@ -97,13 +99,12 @@ public class AlertsMapActivity extends MapActivity {
 				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
 				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
-				ProximityAlert alert = new ProximityAlert(point, title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
+				ProximityAlert alert = new ProximityAlert(point, title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
 
 				// Add to db
 				long id = dbHelper.addAlert(alert);
-				// TODO allow user to set radius and expiration
+				// TODO allow user to set expiration
 				// TODO select vibrate/alert tone
-				// TODO preview radius
 				// TODO styling for edittexts in popup
 				// TODO scheduling
 				// TODO styling for listalertsactivity
@@ -111,12 +112,13 @@ public class AlertsMapActivity extends MapActivity {
 				if (id >= 0) {
 					// Register proximity alert with locman
 					double lat = point.getLatitudeE6() / 1e6, lon = point.getLongitudeE6() / 1e6;
-					locMan.addProximityAlert(lat, lon, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION, createAlertPI(id));
+					locMan.addProximityAlert(lat, lon, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION, createAlertPI(id));
 					alertsOverlay.itemsUpdated();
 					searchOverlay.clear();
 
 					mapView.postInvalidate();
 					mapView.removeView(popupView);
+					radiusOverlay.clearUI();
 
 					Toast.makeText(AlertsMapActivity.this, R.string.alert_added, Toast.LENGTH_SHORT).show();
 				} else {
@@ -166,20 +168,23 @@ public class AlertsMapActivity extends MapActivity {
 		
 		Drawable alertMarker = getResources().getDrawable(R.drawable.marker_alert);
 		alertsOverlay = new AlertsOverlay(dbHelper, popupView, alertMarker);
-		overlays.add(alertsOverlay);
-
-		Drawable radiusMarker = getResources().getDrawable(R.drawable.radius_handle);
-		RadiusItemOverlay rOverlay = new RadiusItemOverlay(this, radiusMarker);
-		overlays.add(rOverlay);
 
 		myLocOverlay = new MyLocationOverlay(this, mapView);
 		myLocOverlay.enableMyLocation();
-		overlays.add(myLocOverlay);
 
 		Drawable searchMarker = getResources().getDrawable(R.drawable.marker_search);
 		searchOverlay = new SearchOverlay(popupView, searchMarker);
-		overlays.add(searchOverlay);
 
+		List<IItemOverlay> itemOverlays = new ArrayList<IItemOverlay>();
+		itemOverlays.add(alertsOverlay);
+		itemOverlays.add(searchOverlay);
+		Drawable radiusMarker = getResources().getDrawable(R.drawable.radius_handle);
+		radiusOverlay = new RadiusOverlay(this, itemOverlays, radiusMarker);
+		
+		overlays.add(radiusOverlay);
+		overlays.add(searchOverlay);
+		overlays.add(alertsOverlay);
+		overlays.add(myLocOverlay);
 	}
 
 	@Override
@@ -317,6 +322,7 @@ public class AlertsMapActivity extends MapActivity {
 
 						mapView.postInvalidate();
 						mapView.removeView(popupView);
+						radiusOverlay.clearUI();
 
 						Toast.makeText(AlertsMapActivity.this, R.string.alert_removed, Toast.LENGTH_SHORT).show();
 					} else {
@@ -333,7 +339,7 @@ public class AlertsMapActivity extends MapActivity {
 					PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 					String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
 					ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
-					ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
+					ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
 					newAlert.setId(alertItem.getId());
 
 					int numUpdated = dbHelper.updateAlert(newAlert);
@@ -342,6 +348,7 @@ public class AlertsMapActivity extends MapActivity {
 
 						mapView.postInvalidate();
 						mapView.removeView(popupView);
+						radiusOverlay.clearUI();
 
 						Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
 					} else {
