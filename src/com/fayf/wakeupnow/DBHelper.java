@@ -69,10 +69,12 @@ public class DBHelper extends SQLiteOpenHelper{
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
+		
 		String title = alert.getTitle();
 		if(title.length() > 0) values.put(KEY_TITLE, title);
 		String snippet = alert.getSnippet();
 		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
+		
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
 
@@ -85,10 +87,12 @@ public class DBHelper extends SQLiteOpenHelper{
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
+		
 		String title = alert.getTitle();
 		if(title.length() > 0) values.put(KEY_TITLE, title);
 		String snippet = alert.getSnippet();
 		if(snippet.length() > 0) values.put(KEY_SNIPPET, snippet);
+		
 		values.put(KEY_EXPIRY, alert.getExpiration());
 		values.put(KEY_ACTIVE, 1);
 

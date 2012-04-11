@@ -3,9 +3,12 @@ package com.fayf.wakeupnow.activity;
 import java.io.IOException;
 import java.util.List;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.drawable.Drawable;
@@ -42,6 +45,9 @@ import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 
 public class AlertsMapActivity extends MapActivity {
+	private static final int DIALOG_CONFIRM_REMOVE = 0;
+	private static final int DIALOG_CONFIRM_SAVE = 1;
+	
 	public class PopupViewHolder {
 		public Button buttonDelete,
 				buttonCreate,
@@ -87,14 +93,14 @@ public class AlertsMapActivity extends MapActivity {
 				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
 				ProximityAlert alert = new ProximityAlert(point, title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
-
+				
 				// Add to db
 				long id = dbHelper.addAlert(alert);
-				// TODO allow user to set radius and expiration
-				// TODO styling for edittexts in popup
 				// TODO styling for listalertsactivity
-				// TODO allow timetabling
-				// TODO confirm for deletion/saving
+				// TODO allow user to set radius and expiration
+				// TODO preview radius
+				// TODO styling for edittexts in popup
+				// TODO scheduling
 
 				if (id >= 0) {
 					// Register proximity alert with locman
@@ -116,43 +122,14 @@ public class AlertsMapActivity extends MapActivity {
 		popupDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
-
-				locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
-				int numRemoved = dbHelper.removeAlert(alertItem.getId());
-				if (numRemoved > 0) {
-					alertsOverlay.itemsUpdated();
-
-					mapView.postInvalidate();
-					mapView.removeView(popupView);
-
-					Toast.makeText(AlertsMapActivity.this, R.string.alert_removed, Toast.LENGTH_SHORT).show();
-				} else {
-					Toast.makeText(AlertsMapActivity.this, R.string.error_removing_alert, Toast.LENGTH_SHORT).show();
-				}
+				showDialog(DIALOG_CONFIRM_REMOVE);
 			}
 		});
 		popupSave = (Button) popupView.findViewById(R.id.button_save);
 		popupSave.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
-				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
-				ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
-				ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
-				newAlert.setId(alertItem.getId());
-
-				int numUpdated = dbHelper.updateAlert(newAlert);
-				if (numUpdated > 0) {
-					alertsOverlay.itemsUpdated();
-
-					mapView.postInvalidate();
-					mapView.removeView(popupView);
-
-					Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
-				} else {
-					Toast.makeText(AlertsMapActivity.this, R.string.error_saving_changes, Toast.LENGTH_SHORT).show();
-				}
+				showDialog(DIALOG_CONFIRM_SAVE);
 			}
 		});
 
@@ -311,6 +288,66 @@ public class AlertsMapActivity extends MapActivity {
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
+		}
+	}
+	
+	@Override
+	protected Dialog onCreateDialog(int id, Bundle args) {
+		switch(id){
+		case DIALOG_CONFIRM_REMOVE:
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Remove alert?")
+				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
+
+						locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
+						int numRemoved = dbHelper.removeAlert(alertItem.getId());
+						if (numRemoved > 0) {
+							alertsOverlay.itemsUpdated();
+
+							mapView.postInvalidate();
+							mapView.removeView(popupView);
+
+							Toast.makeText(AlertsMapActivity.this, R.string.alert_removed, Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(AlertsMapActivity.this, R.string.error_removing_alert, Toast.LENGTH_SHORT).show();
+						}
+					}
+				})
+				.setNegativeButton("Cancel", null);
+			return builder.show();
+		case DIALOG_CONFIRM_SAVE:
+			builder = new AlertDialog.Builder(this);
+			builder.setTitle("Save changes?")
+				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
+						String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
+						ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
+						ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, C.DEFAULT_RADIUS, C.DEFAULT_EXPIRATION);
+						newAlert.setId(alertItem.getId());
+
+						int numUpdated = dbHelper.updateAlert(newAlert);
+						if (numUpdated > 0) {
+							alertsOverlay.itemsUpdated();
+
+							mapView.postInvalidate();
+							mapView.removeView(popupView);
+
+							Toast.makeText(AlertsMapActivity.this, R.string.changes_saved, Toast.LENGTH_SHORT).show();
+						} else {
+							Toast.makeText(AlertsMapActivity.this, R.string.error_saving_changes, Toast.LENGTH_SHORT).show();
+						}
+					}
+				})
+				.setNegativeButton("Cancel", null);
+			return builder.show();
+			
+		default:
+			return super.onCreateDialog(id, args);
 		}
 	}
 
