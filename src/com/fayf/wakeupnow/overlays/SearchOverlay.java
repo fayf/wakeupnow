@@ -14,8 +14,9 @@ import com.fayf.wakeupnow.activity.AlertsMapActivity.PopupViewHolder;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
+import com.google.android.maps.OverlayItem;
 
-public class SearchOverlay extends ItemizedOverlay<SearchResult> {
+public class SearchOverlay extends ItemizedOverlay<SearchResult> implements IItemOverlay{
 	private View popupView;
 	private boolean isPinch;
 	private int tappedIndex;
@@ -57,7 +58,7 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult> {
 		}
 
 		if (e.getAction() == MotionEvent.ACTION_MOVE) {
-			mapView.removeView(popupView);
+			//mapView.removeView(popupView);
 			if (e.getPointerCount() > 1) isPinch = true;
 		}
 		return super.onTouchEvent(e, mapView);
@@ -101,5 +102,10 @@ public class SearchOverlay extends ItemizedOverlay<SearchResult> {
 	protected boolean onTap(int index) {
 		tappedIndex = index;
 		return true;
+	}
+
+	@Override
+	public List<? extends OverlayItem> getItems() {
+		return items;
 	}
 }

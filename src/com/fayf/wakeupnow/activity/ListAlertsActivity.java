@@ -18,8 +18,8 @@ import com.fayf.wakeupnow.DBHelper;
 import com.fayf.wakeupnow.R;
 
 public class ListAlertsActivity extends ListActivity{
-	private static final String[] FROM = {DBHelper.KEY_ID, DBHelper.KEY_LATITUDE, DBHelper.KEY_LONGITUDE, DBHelper.KEY_EXPIRY};
-	private static final int[] TO = {R.id.text_id, R.id.text_lat, R.id.text_long, R.id.text_expiry};
+	private static final String[] FROM = {DBHelper.KEY_ID, DBHelper.KEY_TITLE, DBHelper.KEY_SNIPPET, DBHelper.KEY_LATITUDE, DBHelper.KEY_LONGITUDE, DBHelper.KEY_EXPIRY};
+	private static final int[] TO = {R.id.text_id, R.id.text_title, R.id.text_snippet, R.id.text_lat, R.id.text_long, R.id.text_expiry};
 	
 	private DBHelper dbHelper;
 	private SimpleCursorAdapter adapter;

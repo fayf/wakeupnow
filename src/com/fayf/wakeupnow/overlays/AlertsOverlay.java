@@ -9,19 +9,20 @@ import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.fayf.wakeupnow.C;
 import com.fayf.wakeupnow.DBHelper;
 import com.fayf.wakeupnow.R;
 import com.fayf.wakeupnow.Utils;
-import com.fayf.wakeupnow.R.id;
 import com.fayf.wakeupnow.activity.AlertsMapActivity.PopupViewHolder;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapView;
+import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
-public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> {
+public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements IItemOverlay{
 	private DBHelper dbHelper;
-	private boolean isPinch = false;
+	private boolean isPinching = false;
 	private int tappedIndex;
 	private GeoPoint tappedPoint;
 	private MapView.LayoutParams mapParams = new MapView.LayoutParams(MapView.LayoutParams.WRAP_CONTENT, MapView.LayoutParams.WRAP_CONTENT, null, 0, Utils.dp2px(-20), MapView.LayoutParams.BOTTOM_CENTER);
@@ -54,13 +55,13 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> {
 	@Override
 	public boolean onTouchEvent(MotionEvent e, MapView mapView) {
 		if (e.getAction() == MotionEvent.ACTION_DOWN) {
-			isPinch = false;
+			isPinching = false;
 		}
 
 		if (e.getAction() == MotionEvent.ACTION_MOVE) {
-			tappedPoint = null;
-			mapView.removeView(popupView);
-			if (e.getPointerCount() > 1) isPinch = true;
+//			tappedPoint = null;
+//			mapView.removeView(popupView);
+			if (e.getPointerCount() > 1) isPinching = true;
 		}
 		return super.onTouchEvent(e, mapView);
 	}
@@ -70,7 +71,7 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> {
 		tappedIndex = -1;
 		tappedPoint = null;
 		boolean itemTapped = super.onTap(p, mapView);
-		if (!isPinch) {
+		if (!isPinching) {
 			PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 
 			if (itemTapped) {
@@ -127,12 +128,12 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> {
 				int radius = Utils.m2px(alert.getRadius(), alert.getPoint().getLatitudeE6() / 1e6, projection);
 
 				// Draw fill
-				paint.setARGB(100, 0, 100, 255);
+				paint.setColor(C.RADIUS_FILL);
 				paint.setStyle(Paint.Style.FILL);
 				canvas.drawCircle((float) pt.x, (float) pt.y, radius, paint);
 
 				// Draw stroke
-				paint.setARGB(100, 0, 0, 0);
+				paint.setColor(C.RADIUS_STROKE);
 				paint.setStrokeWidth(2);
 				paint.setStyle(Paint.Style.STROKE);
 				canvas.drawCircle((float) pt.x, (float) pt.y, radius, paint);
@@ -147,17 +148,22 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> {
 				paint.setAntiAlias(true);
 
 				// Draw fill
-				paint.setARGB(255, 255, 255, 255);
+				paint.setColor(C.CENTER_FILL);
 				paint.setStyle(Paint.Style.FILL);
 				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
 
 				// Draw stroke
-				paint.setARGB(255, 0, 0, 0);
+				paint.setColor(C.CENTER_STROKE);
 				paint.setStrokeWidth(2);
 				paint.setStyle(Paint.Style.STROKE);
 				canvas.drawCircle((float) pt.x, (float) pt.y, circleRadius, paint);
 			}
 		}
 		super.draw(canvas, mapView, shadow);
+	}
+
+	@Override
+	public List<? extends OverlayItem> getItems() {
+		return dbHelper.getAlerts();
 	}
 }

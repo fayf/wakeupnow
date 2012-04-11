@@ -1,5 +1,7 @@
 package com.fayf.wakeupnow;
 
+import android.graphics.Color;
+
 //Constants
 public class C {
 	public static final String API_KEY_DEBUG = "0A19afdIbyAvK-T4zkmx8oFN6mwOODNUSa9-Ynw";
@@ -27,4 +29,11 @@ public class C {
 	public static final double SG_BOUND_WEST = 103.638275;
 	
 	public static final int DEFAULT_ZOOM_LEVEL = 15;
+
+//	public static final int RADIUS_HANDLE_FILL = 0xff0064ff;
+//	public static final int RADIUS_HANDLE_STROKE = 0xff000000;
+	public static final int RADIUS_FILL = 0x640064ff;
+	public static final int RADIUS_STROKE = 0x64000000;
+	public static final int CENTER_FILL = Color.WHITE;
+	public static final int CENTER_STROKE = Color.BLACK;
 }
