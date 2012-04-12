@@ -6,7 +6,6 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.DialogInterface;
@@ -34,6 +33,7 @@ import com.fayf.wakeupnow.DBHelper;
 import com.fayf.wakeupnow.G;
 import com.fayf.wakeupnow.R;
 import com.fayf.wakeupnow.RecentSearchProvider;
+import com.fayf.wakeupnow.Utils;
 import com.fayf.wakeupnow.overlays.AlertsOverlay;
 import com.fayf.wakeupnow.overlays.IItemOverlay;
 import com.fayf.wakeupnow.overlays.ProximityAlert;
@@ -103,6 +103,7 @@ public class AlertsMapActivity extends MapActivity {
 
 				// Add to db
 				long id = dbHelper.addAlert(alert);
+				// TODO show button to clear ui
 				// TODO allow user to set expiration
 				// TODO select vibrate/alert tone
 				// TODO styling for edittexts in popup
@@ -112,7 +113,7 @@ public class AlertsMapActivity extends MapActivity {
 				if (id >= 0) {
 					// Register proximity alert with locman
 					double lat = point.getLatitudeE6() / 1e6, lon = point.getLongitudeE6() / 1e6;
-					locMan.addProximityAlert(lat, lon, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION, createAlertPI(id));
+					locMan.addProximityAlert(lat, lon, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION, Utils.createAlertPI(getApplicationContext(), id));
 					alertsOverlay.itemsUpdated();
 					searchOverlay.clear();
 
@@ -271,7 +272,7 @@ public class AlertsMapActivity extends MapActivity {
 		case R.id.menu_clear:
 			List<ProximityAlert> alerts = dbHelper.getAlerts();
 			for (ProximityAlert alert : alerts)
-				locMan.removeProximityAlert(createAlertPI(alert.getId()));
+				locMan.removeProximityAlert(Utils.createAlertPI(getApplicationContext(), alert.getId()));
 
 			dbHelper.clearData();
 			alertsOverlay.itemsUpdated();
@@ -315,7 +316,7 @@ public class AlertsMapActivity extends MapActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
 
-					locMan.removeProximityAlert(createAlertPI(alertItem.getId()));
+					locMan.removeProximityAlert(Utils.createAlertPI(getApplicationContext(), alertItem.getId()));
 					int numRemoved = dbHelper.removeAlert(alertItem.getId());
 					if (numRemoved > 0) {
 						alertsOverlay.itemsUpdated();
@@ -366,14 +367,6 @@ public class AlertsMapActivity extends MapActivity {
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
-	}
-
-	private PendingIntent createAlertPI(long id) {
-		Intent intent = new Intent(getApplicationContext(), WakeUpActivity.class);
-		intent.setAction("" + id);
-		PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-
-		return pi;
 	}
 
 	private <T extends IItemOverlay> void zoomToFit(T overlay) {
