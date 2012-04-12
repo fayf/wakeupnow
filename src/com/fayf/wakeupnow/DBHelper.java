@@ -10,7 +10,7 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.fayf.wakeupnow.overlays.ProximityAlert;
+import com.fayf.wakeupnow.overlays.Alert;
 import com.google.android.maps.GeoPoint;
 
 public class DBHelper extends SQLiteOpenHelper{
@@ -59,15 +59,15 @@ public class DBHelper extends SQLiteOpenHelper{
 		db.execSQL(CREATE_TABLE);
 	}
 
-	public ProximityAlert getAlert(int index){
+	public Alert getAlert(int index){
 		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, KEY_ID + " asc", index+",1");
-		ProximityAlert alert = null;
+		Alert alert = null;
 		if(c.moveToFirst()) alert = alertFromCursor(c);
 		c.close();
 		return alert;
 	}
 
-	public long addAlert(ProximityAlert alert){
+	public long addAlert(Alert alert){
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
@@ -86,7 +86,7 @@ public class DBHelper extends SQLiteOpenHelper{
 		return id;
 	}
 	
-	public int updateAlert(ProximityAlert alert){
+	public int updateAlert(Alert alert){
 		ContentValues values = new ContentValues();
 		values.put(KEY_LATITUDE, alert.getPoint().getLatitudeE6());
 		values.put(KEY_LONGITUDE, alert.getPoint().getLongitudeE6());
@@ -111,12 +111,12 @@ public class DBHelper extends SQLiteOpenHelper{
 		return DatabaseUtils.queryNumEntries(db, TABLE_NAME);
 	}
 
-	public List<ProximityAlert> getAlerts(){
-		List<ProximityAlert> alerts = new ArrayList<ProximityAlert>();
+	public List<Alert> getAlerts(){
+		List<Alert> alerts = new ArrayList<Alert>();
 		Cursor c = db.query(TABLE_NAME, null, null, null, null, null, null);
 
 		while(c.moveToNext()){
-			ProximityAlert alert = alertFromCursor(c);
+			Alert alert = alertFromCursor(c);
 			alerts.add(alert);
 		}
 
@@ -132,8 +132,8 @@ public class DBHelper extends SQLiteOpenHelper{
 		return db.delete(TABLE_NAME, null, null);
 	}
 
-	private ProximityAlert alertFromCursor(Cursor c){
-		ProximityAlert alert = new ProximityAlert(
+	private Alert alertFromCursor(Cursor c){
+		Alert alert = new Alert(
 				new GeoPoint(c.getInt(c.getColumnIndex(KEY_LATITUDE)), c.getInt(c.getColumnIndex(KEY_LONGITUDE))),
 				c.getString(c.getColumnIndex(KEY_TITLE)),
 				c.getString(c.getColumnIndex(KEY_SNIPPET)),

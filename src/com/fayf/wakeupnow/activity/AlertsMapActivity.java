@@ -36,7 +36,7 @@ import com.fayf.wakeupnow.RecentSearchProvider;
 import com.fayf.wakeupnow.Utils;
 import com.fayf.wakeupnow.overlays.AlertsOverlay;
 import com.fayf.wakeupnow.overlays.IItemOverlay;
-import com.fayf.wakeupnow.overlays.ProximityAlert;
+import com.fayf.wakeupnow.overlays.Alert;
 import com.fayf.wakeupnow.overlays.RadiusOverlay;
 import com.fayf.wakeupnow.overlays.SearchOverlay;
 import com.fayf.wakeupnow.overlays.SearchResult;
@@ -62,11 +62,13 @@ public class AlertsMapActivity extends MapActivity {
 	}
 
 	private Geocoder geocoder;
-	private MapView mapView;
 	private LocationManager locMan;
 	private DBHelper dbHelper;
 	private MenuInflater menuInflater;
+
+	private MapView mapView;
 	private View popupView;
+	private Button buttonClear;
 
 	private MapController controller;
 
@@ -98,11 +100,10 @@ public class AlertsMapActivity extends MapActivity {
 				GeoPoint point = (GeoPoint) mapView.getTag(R.id.tag_geopoint);
 				PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 				String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
-				ProximityAlert alert = new ProximityAlert(point, title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
+				Alert alert = new Alert(point, title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
 
 				// Add to db
 				long id = dbHelper.addAlert(alert);
-				// TODO show button to clear ui
 				// TODO allow user to set expiration
 				// TODO select vibrate/alert tone
 				// TODO styling for edittexts in popup
@@ -150,13 +151,12 @@ public class AlertsMapActivity extends MapActivity {
 		popupView.setTag(popupVH);
 
 		// Create mapview
-		mapView = new MapView(this, C.API_KEY_DEBUG);
-		setContentView(mapView);
+		setContentView(R.layout.activity_alerts_map);
+		mapView = (MapView) findViewById(R.id.map);
 
 		// Configure mapview
 		controller = mapView.getController();
 		controller.setZoom(C.DEFAULT_ZOOM_LEVEL);
-		mapView.setClickable(true); // Enables map panning/zooming controls
 		mapView.setBuiltInZoomControls(true);
 
 		// Show last known location if available
@@ -185,6 +185,19 @@ public class AlertsMapActivity extends MapActivity {
 		overlays.add(searchOverlay);
 		overlays.add(alertsOverlay);
 		overlays.add(myLocOverlay);
+		
+		//Clear button
+		buttonClear = (Button) findViewById(R.id.button_clear);
+		buttonClear.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				radiusOverlay.clearUI();
+				mapView.removeView(popupView);
+				searchOverlay.clear();
+				mapView.postInvalidate();
+				alertsOverlay.itemsUpdated();
+			}
+		});
 	}
 
 	@Override
@@ -269,8 +282,8 @@ public class AlertsMapActivity extends MapActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case R.id.menu_clear:
-			List<ProximityAlert> alerts = dbHelper.getAlerts();
-			for (ProximityAlert alert : alerts)
+			List<Alert> alerts = dbHelper.getAlerts();
+			for (Alert alert : alerts)
 				locMan.removeProximityAlert(Utils.createAlertPI(getApplicationContext(), alert.getId()));
 
 			dbHelper.clearData();
@@ -314,7 +327,7 @@ public class AlertsMapActivity extends MapActivity {
 			builder.setTitle(R.string.confirm_remove).setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
+					Alert alertItem = (Alert) mapView.getTag(R.id.tag_item);
 
 					locMan.removeProximityAlert(Utils.createAlertPI(getApplicationContext(), alertItem.getId()));
 					int numRemoved = dbHelper.removeAlert(alertItem.getId());
@@ -339,8 +352,8 @@ public class AlertsMapActivity extends MapActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					PopupViewHolder popupVH = (PopupViewHolder) popupView.getTag();
 					String title = popupVH.editTitle.getText().toString(), snippet = popupVH.editSnippet.getText().toString();
-					ProximityAlert alertItem = (ProximityAlert) mapView.getTag(R.id.tag_item);
-					ProximityAlert newAlert = new ProximityAlert(alertItem.getPoint(), title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
+					Alert alertItem = (Alert) mapView.getTag(R.id.tag_item);
+					Alert newAlert = new Alert(alertItem.getPoint(), title, snippet, radiusOverlay.getRadius(), C.DEFAULT_EXPIRATION);
 					newAlert.setId(alertItem.getId());
 
 					int numUpdated = dbHelper.updateAlert(newAlert);

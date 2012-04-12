@@ -28,6 +28,7 @@ public class C {
 	public static final double SG_BOUND_SOUTH = 1.258556;
 	public static final double SG_BOUND_WEST = 103.638275;
 
+	public static final int RADIUS_TEXT = Color.DKGRAY;
 	public static final int RADIUS_FILL_ACTIVE = 0x6400ff00;
 	public static final int RADIUS_FILL = 0x64ff6400;
 	public static final int RADIUS_STROKE = 0x64000000;

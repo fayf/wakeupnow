@@ -18,5 +18,6 @@
     <string name="no_alerts_to_show">No alerts to show.</string>
     <string name="confirm_remove">Remove alert?</string>
     <string name="confirm_save">Save changes?</string>
+    <string name="api_key_debug">0A19afdIbyAvK-T4zkmx8oFN6mwOODNUSa9-Ynw</string>
 
 </resources>

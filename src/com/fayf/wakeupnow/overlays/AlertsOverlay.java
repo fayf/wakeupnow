@@ -20,7 +20,7 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.OverlayItem;
 import com.google.android.maps.Projection;
 
-public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements IItemOverlay{
+public class AlertsOverlay extends ItemizedOverlay<Alert> implements IItemOverlay{
 	private DBHelper dbHelper;
 	private boolean isPinching = false;
 	private int tappedIndex = -1;
@@ -37,7 +37,7 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 	}
 
 	@Override
-	protected ProximityAlert createItem(int i) {
+	protected Alert createItem(int i) {
 		return dbHelper.getAlert(i);
 	}
 
@@ -73,7 +73,7 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 
 			if (itemTapped) {
 				// Tap on alert item
-				ProximityAlert item = dbHelper.getAlert(tappedIndex);
+				Alert item = dbHelper.getAlert(tappedIndex);
 				mapParams.point = item.getPoint();
 				mapView.setTag(R.id.tag_item, item);
 				popupVH.buttonCreate.setVisibility(View.GONE);
@@ -117,13 +117,13 @@ public class AlertsOverlay extends ItemizedOverlay<ProximityAlert> implements II
 
 		if (shadow) {
 			// Draw alert radius
-			List<ProximityAlert> alerts = dbHelper.getAlerts();
-			ProximityAlert tappedAlert = null;
+			List<Alert> alerts = dbHelper.getAlerts();
+			Alert tappedAlert = null;
 			
 			//Do not draw for tapped alert
 			if(tappedIndex >= 0) tappedAlert = alerts.get(tappedIndex);
 			
-			for (ProximityAlert alert : alerts) {
+			for (Alert alert : alerts) {
 				if(tappedAlert != null && alert.equals(tappedAlert)) continue;
 				
 				Point pt = new Point();
