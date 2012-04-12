@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:title="Settings" >
+
+    <com.fayf.wakeupnow.IntEditTextPreference
+        android:defaultValue="1000"
+        android:inputType="number"
+        android:key="com.fayf.wakeupnow.PREF_DEFAULT_RADIUS"
+        android:persistent="true"
+        android:summary="In meters"
+        android:title="Default alert radius" />
+    
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="com.fayf.wakeupnow.PREF_RESTORE_ON_BOOT"
+        android:persistent="true"
+        android:summary="Android removes all alerts on boot by default. Check to restore them."
+        android:title="Restore alerts on boot" />
+</PreferenceScreen>

@@ -5,8 +5,8 @@ import android.graphics.Color;
 //Constants
 public class C {
 	public static final String API_KEY_DEBUG = "0A19afdIbyAvK-T4zkmx8oFN6mwOODNUSa9-Ynw";
-	public static final int DEFAULT_RADIUS = 1000;
 	public static final long DEFAULT_EXPIRATION = -1;
+	public static final int DEFAULT_ZOOM_LEVEL = 15;
 	
 	public static final String PACKAGE_NAME = "com.fayf.wakeupnow";
 	public static final String EXTRA_LATITUDE = PACKAGE_NAME + ".EXTRA_LATITUDE";
@@ -27,14 +27,14 @@ public class C {
 	public static final double SG_BOUND_EAST = 104.007469;
 	public static final double SG_BOUND_SOUTH = 1.258556;
 	public static final double SG_BOUND_WEST = 103.638275;
-	
-	public static final int DEFAULT_ZOOM_LEVEL = 15;
 
-//	public static final int RADIUS_HANDLE_FILL = 0xff0064ff;
-//	public static final int RADIUS_HANDLE_STROKE = 0xff000000;
 	public static final int RADIUS_FILL_ACTIVE = 0x6400ff00;
 	public static final int RADIUS_FILL = 0x64ff6400;
 	public static final int RADIUS_STROKE = 0x64000000;
 	public static final int CENTER_FILL = Color.WHITE;
 	public static final int CENTER_STROKE = Color.BLACK;
+
+	public static final String PREFS_NAME = PACKAGE_NAME + ".PREFS_NAME";
+	public static final String PREF_DEFAULT_RADIUS = PACKAGE_NAME + ".PREF_DEFAULT_RADIUS";
+	public static final String PREF_RESTORE_ON_BOOT = PACKAGE_NAME + ".PREF_RESTORE_ON_BOOT";
 }

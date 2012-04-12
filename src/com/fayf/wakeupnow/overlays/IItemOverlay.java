@@ -2,7 +2,6 @@ package com.fayf.wakeupnow.overlays;
 
 import java.util.List;
 
-import com.google.android.maps.GeoPoint;
 import com.google.android.maps.OverlayItem;
 
 public interface IItemOverlay {

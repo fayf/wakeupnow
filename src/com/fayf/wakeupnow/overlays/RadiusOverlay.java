@@ -114,7 +114,7 @@ public class RadiusOverlay extends ItemizedOverlay<OverlayItem> {
 			}
 			center = (tappedItem == null) ? p : tappedItem.getPoint();
 			if (tappedItem != null && tappedItem instanceof ProximityAlert) radius = ((ProximityAlert) tappedItem).getRadius();
-			else radius = C.DEFAULT_RADIUS;
+			else radius = mapView.getContext().getSharedPreferences(C.PREFS_NAME, Context.MODE_PRIVATE).getInt(C.PREF_DEFAULT_RADIUS, 1000);
 
 			Projection proj = mapView.getProjection();
 

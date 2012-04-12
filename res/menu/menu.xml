@@ -23,5 +23,9 @@
         android:id="@+id/menu_search"
         android:title="Search">
     </item>
+    <item
+        android:id="@+id/menu_options"
+        android:title="Options">
+    </item>
 
 </menu>

@@ -51,8 +51,7 @@ import com.google.android.maps.OverlayItem;
 public class AlertsMapActivity extends MapActivity {
 	private static final int DIALOG_CONFIRM_REMOVE = 0;
 	private static final int DIALOG_CONFIRM_SAVE = 1;
-	
-	private static final double zoomPadding = 1.2;
+	private static final double ZOOM_PADDING_FACTOR = 1.2;
 
 	public class PopupViewHolder {
 		public Button buttonDelete,
@@ -295,11 +294,12 @@ public class AlertsMapActivity extends MapActivity {
 			onSearchRequested();
 			return true;
 		case R.id.menu_zoom_alerts:
-			if (alertsOverlay.size() > 0) {
-				zoomToFit(alertsOverlay);
-			} else {
-				Toast.makeText(this, R.string.no_alerts_to_show, Toast.LENGTH_SHORT).show();
-			}
+			if (alertsOverlay.size() > 0) zoomToFit(alertsOverlay);
+			else Toast.makeText(this, R.string.no_alerts_to_show, Toast.LENGTH_SHORT).show();
+			return true;
+		case R.id.menu_options:
+			intent = new Intent(this, OptionsActivity.class);
+			startActivity(intent);
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -388,7 +388,7 @@ public class AlertsMapActivity extends MapActivity {
 			minLon = Math.min(lon, minLon);
 		}
 
-		controller.zoomToSpan((int)(zoomPadding*overlay.getLatSpanE6()), (int)(zoomPadding*overlay.getLonSpanE6()));
+		controller.zoomToSpan((int)(ZOOM_PADDING_FACTOR*overlay.getLatSpanE6()), (int)(ZOOM_PADDING_FACTOR*overlay.getLonSpanE6()));
 		controller.animateTo(new GeoPoint((maxLat + minLat) / 2, (maxLon + minLon) / 2));
 	}
 
