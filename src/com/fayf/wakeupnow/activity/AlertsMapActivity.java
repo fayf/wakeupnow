@@ -104,10 +104,10 @@ public class AlertsMapActivity extends MapActivity {
 
 				// Add to db
 				long id = dbHelper.addAlert(alert);
-				// TODO allow user to set expiration
 				// TODO select vibrate/alert tone
-				// TODO styling for edittexts in popup
+				// TODO allow user to set expiration
 				// TODO scheduling
+				// TODO styling for edittexts in popup
 				// TODO styling for listalertsactivity
 
 				if (id >= 0) {
